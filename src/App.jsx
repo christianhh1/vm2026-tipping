@@ -16,7 +16,11 @@ const MOCK_MATCHES = [
   { id: 6, home: "Japan", away: "Marokko", homeFlagUrl: "https://flagcdn.com/w80/jp.png", awayFlagUrl: "https://flagcdn.com/w80/ma.png", kickoff: new Date(Date.now() + 1000 * 60 * 60 * 30).toISOString(), status: "SCHEDULED", homeScore: null, awayScore: null, group: "E", round: "r16", matchday: null },
 ];
 
-async function fetchMatches() { return MOCK_MATCHES; }
+async function fetchMatches() {
+  const res = await fetch("/api/matches");
+  if (!res.ok) throw new Error(`API-feil: ${res.status}`);
+  return await res.json();
+}
 
 // ─── SCORING ──────────────────────────────────────────────────────────────────
 const ROUND_POINTS = {
