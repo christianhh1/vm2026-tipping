@@ -24,9 +24,8 @@ export default async function handler(req, res) {
       homeScore: m.score?.fullTime?.home ?? null,
       awayScore: m.score?.fullTime?.away ?? null,
       group: m.group ? m.group.replace("GROUP_", "") : null,
-      round: stageToRound(m.stage, m.utcDate, m.matchday),
+      round: stageToRound(m.utcDate),
       matchday: m.matchday ?? null,
-      stage: m.stage ?? null,
     }));
 
     res.status(200).json(matches);
@@ -35,37 +34,22 @@ export default async function handler(req, res) {
   }
 }
 
-function stageToRound(stage, date, matchday) {
-  // Fallback basert på dato for VM 2026
-  if (date) {
-    const d = new Date(date);
-    const month = d.getMonth() + 1; // 1-indexed
-    const day = d.getDate();
-    // Finale: 19 juli
-    if (month === 7 && day >= 18) return "final";
-    // Semifinale: 14-16 juli
-    if (month === 7 && day >= 14) return "semi";
-    // Kvartfinale: 10-12 juli
-    if (month === 7 && day >= 9) return "qf";
-    // 8-delsfinale: 5-8 juli
-    if (month === 7 && day >= 4) return "r8";
-    // 16-delsfinale: 28 juni kl 18:00+ - 3 juli
-    const hour = d.getUTCHours();
-    if (month === 6 && day === 28 && hour >= 18) return "r16";
-    if ((month === 6 && day >= 29) || (month === 7 && day <= 3)) return "r16";
-    // Gruppespill: matchday bestemmer runde
-    if (matchday === 3) return "group";
-    if (matchday === 2) return "group";
-    return "group";
-  }
+function stageToRound(date) {
+  if (!date) return "group";
+  const d = new Date(date);
+  const month = d.getUTCMonth() + 1;
+  const day = d.getUTCDate();
 
-  if (!stage) return "group";
-  const s = stage.toUpperCase();
-  if (s.includes("GROUP")) return "group";
-  if (s === "ROUND_OF_32" || s.includes("LAST_32")) return "r16";
-  if (s === "ROUND_OF_16" || s.includes("LAST_16")) return "r8";
-  if (s.includes("QUARTER")) return "qf";
-  if (s.includes("SEMI")) return "semi";
-  if (s === "FINAL") return "final";
+  // Finale: 19 juli
+  if (month === 7 && day === 19) return "final";
+  // Semifinale: 14-15 juli
+  if (month === 7 && day >= 14 && day <= 15) return "semi";
+  // Kvartfinale: 9-11 juli
+  if (month === 7 && day >= 9 && day <= 11) return "qf";
+  // 8-delsfinale: 4-7 juli
+  if (month === 7 && day >= 4 && day <= 7) return "r8";
+  // 16-delsfinale: 28 juni - 3 juli
+  if ((month === 6 && day >= 28) || (month === 7 && day <= 3)) return "r16";
+  // Gruppespill: 11-27 juni
   return "group";
 }
