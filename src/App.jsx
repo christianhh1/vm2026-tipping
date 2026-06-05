@@ -19,7 +19,7 @@ const MOCK_MATCHES = [
 async function fetchMatches() {
   const res = await fetch("/api/matches");
   if (!res.ok) throw new Error(`API-feil: ${res.status}`);
-  return await res.json(); }
+  return await res.json();}
 
 // ─── SCORING ──────────────────────────────────────────────────────────────────
 const ROUND_POINTS = {
@@ -685,7 +685,7 @@ export default function App() {
     <div className="auth-bg">
       <div className="auth-card">
         <div className="auth-logo">⚽</div>
-        <h1 className="auth-title">VM 2026 Tipping</h1>
+        <h1 className="auth-title">VM Predictions 2026</h1>
         <p className="auth-sub">Tips med venner – hvem er best?</p>
         <div className="auth-tabs">
           <button className={authMode === "login" ? "active" : ""} onClick={() => { setAuthMode("login"); setAuthError(""); }}>Logg inn</button>
@@ -708,7 +708,7 @@ export default function App() {
         <div className="header-left">
           <span className="header-logo">⚽</span>
           <div>
-            <div className="header-title">VM 2026 Tipping</div>
+            <div className="header-title">VM Predictions 2026</div>
             <div className="header-user">Hei, {username}!</div>
           </div>
         </div>
