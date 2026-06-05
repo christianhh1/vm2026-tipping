@@ -19,7 +19,7 @@ const MOCK_MATCHES = [
 async function fetchMatches() {
   const res = await fetch("/api/matches");
   if (!res.ok) throw new Error(`API-feil: ${res.status}`);
-  return await res.json() } 
+  return await res.json(); }
 
 // ─── SCORING ──────────────────────────────────────────────────────────────────
 const ROUND_POINTS = {
@@ -748,7 +748,38 @@ export default function App() {
         <div className="rules-panel">
           <h2 className="lb-title">📋 Regler</h2>
           <div className="rules-content">
-            <p>Regler kommer snart...</p>
+            <div className="rule-section">
+              <h3 className="rule-heading">🎯 Slik tipper du</h3>
+              <p>Du skal tippe hvilket lag som vinner og hva stillingen blir i hver kamp. Poengene du kan vinne står øverst til høyre i hvert kampkort – første tall er poeng for riktig lag, andre tall er bonuspoeng for riktig stilling.</p>
+            </div>
+
+            <div className="rule-section">
+              <h3 className="rule-heading">📊 Poengsystem</h3>
+              <div className="points-table">
+                <div className="points-row"><span>Gruppespill</span><span className="points-val">2 + 1p</span></div>
+                <div className="points-row"><span>16-delsfinale</span><span className="points-val">3 + 1p</span></div>
+                <div className="points-row"><span>8-delsfinale</span><span className="points-val">3 + 2p</span></div>
+                <div className="points-row"><span>Kvartfinale</span><span className="points-val">4 + 2p</span></div>
+                <div className="points-row"><span>Semifinale</span><span className="points-val">4 + 3p</span></div>
+                <div className="points-row"><span>Finale</span><span className="points-val">5 + 3p</span></div>
+              </div>
+              <p style={{marginTop: 10}}>Du må ha riktig lag for å få bonuspoeng for riktig stilling. Poengene øker jo lenger vi kommer i VM.</p>
+            </div>
+
+            <div className="rule-section">
+              <h3 className="rule-heading">⚽ Uavgjort i sluttspillet</h3>
+              <p>Tipper du uavgjort i sluttspillet, må du også velge hvem du tror går videre. Tipper du feil lag som går videre, får du ingen poeng – selv om stillingen var riktig.</p>
+            </div>
+
+            <div className="rule-section">
+              <h3 className="rule-heading">🏆 VM-vinner</h3>
+              <p>Før VM begynner skal alle tippe hvilket lag som vinner hele VM. Får du riktig, får du <strong>5 bonuspoeng</strong>. Dette låses når første kamp sparkes i gang.</p>
+            </div>
+
+            <div className="rule-section">
+              <h3 className="rule-heading">🤝 Likt poengsum</h3>
+              <p>Er det likt poengsum mellom to spillere, er det den med flest bonuspoeng (eksakte stilinger) som vinner.</p>
+            </div>
           </div>
         </div>
       )}
@@ -922,5 +953,11 @@ const CSS = `
   .leave-btn:hover { background: rgba(255,61,61,0.1); }
   .footer { text-align: center; padding: 30px 0 10px; font-size: 0.75rem; color: var(--muted); }
   .rules-panel { padding: 20px 0; max-width: 680px; }
-  .rules-content { background: var(--card); border: 1px solid var(--card-border); border-radius: 16px; padding: 24px 28px; line-height: 1.8; font-size: 0.95rem; white-space: pre-wrap; }
+  .rules-content { display: flex; flex-direction: column; gap: 20px; }
+  .rule-section { background: var(--card); border: 1px solid var(--card-border); border-radius: 16px; padding: 20px 24px; }
+  .rule-heading { font-family: 'Bebas Neue', cursive; font-size: 1.2rem; letter-spacing: 1.5px; color: var(--green); margin-bottom: 10px; }
+  .rule-section p { font-size: 0.9rem; color: var(--text); line-height: 1.7; }
+  .points-table { display: flex; flex-direction: column; gap: 6px; }
+  .points-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 12px; background: rgba(255,255,255,0.04); border-radius: 8px; font-size: 0.88rem; }
+  .points-val { font-family: 'Bebas Neue', cursive; font-size: 1.1rem; letter-spacing: 2px; color: var(--gold); }
 `;
