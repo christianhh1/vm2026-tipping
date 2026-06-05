@@ -76,7 +76,7 @@ function hasStarted(iso) { return new Date(iso) <= new Date(); }
 function generateCode() { return Math.floor(10000 + Math.random() * 90000).toString(); }
 
 // ─── VM TEAMS ─────────────────────────────────────────────────────────────────
-const VM_TEAMS = ["Algeria","Argentina","Australia","Brasil","Canada","Ecuador","Egypt","England","Frankrike","Ghana","Honduras","Iran","Italia","Elfenbenskysten","Jamaica","Japan","Kamerun","Kenya","Marokko","Mexico","Nederland","New Zealand","Nigeria","Norge","Panama","Paraguay","Peru","Polen","Portugal","Qatar","Saudi-Arabia","Senegal","Serbia","Skottland","Spania","Sveits","Sverige","Sør-Korea","Tunisia","Tyrkia","Tyskland","Ukraine","Uruguay","USA","Venezuela","Østerrike"].sort();
+// VM_TEAMS hentes dynamisk fra kampene – se WinnerPick-komponenten
 
 // ─── ROUND GROUPING ───────────────────────────────────────────────────────────
 const ROUND_ORDER = ["group_1","group_2","group_3","r16","r8","qf","semi","final"];
@@ -273,6 +273,12 @@ function Leaderboard({ allPicks, matches, memberFilter, allWinnerPicks }) {
 
 // ─── VM-VINNER ────────────────────────────────────────────────────────────────
 function WinnerPick({ currentUser, matches, allWinnerPicks, onSaved }) {
+  // Hent alle unike lag fra gruppespill-kamper
+  const VM_TEAMS = [...new Set(
+    matches
+      .filter(m => getRoundKey(m) === "group" && m.home !== "TBD" && m.away !== "TBD")
+      .flatMap(m => [m.home, m.away])
+  )].sort();
   const firstKickoff = matches.length > 0 ? matches.reduce((a, b) => new Date(a.kickoff) < new Date(b.kickoff) ? a : b).kickoff : null;
   const locked = firstKickoff ? hasStarted(firstKickoff) : false;
   const myPick = allWinnerPicks[currentUser];
