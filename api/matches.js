@@ -49,8 +49,10 @@ function stageToRound(stage, date, matchday) {
     if (month === 7 && day >= 9) return "qf";
     // 8-delsfinale: 5-8 juli
     if (month === 7 && day >= 4) return "r8";
-    // 16-delsfinale: 28 juni - 3 juli
-    if ((month === 6 && day >= 28) || (month === 7 && day <= 3)) return "r16";
+    // 16-delsfinale: 28 juni kl 18:00+ - 3 juli
+    const hour = d.getUTCHours();
+    if (month === 6 && day === 28 && hour >= 18) return "r16";
+    if ((month === 6 && day >= 29) || (month === 7 && day <= 3)) return "r16";
     // Gruppespill: matchday bestemmer runde
     if (matchday === 3) return "group";
     if (matchday === 2) return "group";
