@@ -41,12 +41,12 @@ function stageToRound(date) {
   const day = d.getUTCDate();
   const hour = d.getUTCHours();
 
-  // Finale: 19 juli
-  if (month === 7 && day === 19) return "final";
+  // Finale + tredjeplass: 18-19 juli
+  if (month === 7 && day >= 18) return "final";
   // Semifinale: 14-15 juli
   if (month === 7 && day >= 14 && day <= 15) return "semi";
-  // Kvartfinale: 9-11 juli
-  if (month === 7 && day >= 9 && day <= 11) return "qf";
+  // Kvartfinale: 9-12 juli
+  if (month === 7 && day >= 9 && day <= 12) return "qf";
   // 8-delsfinale: 4 juli kl 12:00 UTC og utover, samt 5-7 juli
   if (month === 7 && day === 4 && hour >= 12) return "r8";
   if (month === 7 && day >= 5 && day <= 7) return "r8";
