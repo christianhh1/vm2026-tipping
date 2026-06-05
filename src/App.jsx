@@ -16,11 +16,7 @@ const MOCK_MATCHES = [
   { id: 6, home: "Japan", away: "Marokko", homeFlagUrl: "https://flagcdn.com/w80/jp.png", awayFlagUrl: "https://flagcdn.com/w80/ma.png", kickoff: new Date(Date.now() + 1000 * 60 * 60 * 30).toISOString(), status: "SCHEDULED", homeScore: null, awayScore: null, group: "E", round: "r16", matchday: null },
 ];
 
-async function fetchMatches() {
-  const res = await fetch("/api/matches");
-  if (!res.ok) throw new Error(`API-feil: ${res.status}`);
-  return await res.json();
-}
+async function fetchMatches() { return MOCK_MATCHES; }
 
 // ─── SCORING ──────────────────────────────────────────────────────────────────
 const ROUND_POINTS = {
@@ -743,6 +739,8 @@ export default function App() {
       {tab === "ledertavle" && <Leaderboard allPicks={allPicks} matches={matches} allWinnerPicks={allWinnerPicks} />}
       {tab === "ligaer" && <LeaguePanel currentUser={username} allPicks={allPicks} matches={matches} allWinnerPicks={allWinnerPicks} />}
 
+      <footer className="footer">© Copyright Christian Herbertdinho Herbert</footer>
+
       <style>{CSS}</style>
     </div>
   );
@@ -905,4 +903,5 @@ const CSS = `
   .you-badge { background: rgba(0,200,83,0.15); color: var(--green); font-size: 0.65rem; font-weight: 700; padding: 2px 6px; border-radius: 4px; margin-left: 6px; vertical-align: middle; }
   .leave-btn { margin-top: 20px; background: transparent; border: 1px solid rgba(255,61,61,0.3); color: var(--red); padding: 9px 18px; border-radius: 8px; cursor: pointer; font-family: inherit; font-size: 0.85rem; transition: all .2s; }
   .leave-btn:hover { background: rgba(255,61,61,0.1); }
+  .footer { text-align: center; padding: 30px 0 10px; font-size: 0.75rem; color: var(--muted); }
 `;
