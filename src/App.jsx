@@ -19,7 +19,7 @@ const MOCK_MATCHES = [
 async function fetchMatches() {
   const res = await fetch("/api/matches");
   if (!res.ok) throw new Error(`API-feil: ${res.status}`);
-  return await res.json();}
+  return await res.json();
 
 // ─── SCORING ──────────────────────────────────────────────────────────────────
 const ROUND_POINTS = {
@@ -715,9 +715,7 @@ export default function App() {
         <button className="logout-btn" onClick={logout}>Logg ut</button>
       </header>
 
-      <div className="api-notice">
-        {matchesLoading ? "⏳ Laster kamper…" : matchesError ? `⚠️ ${matchesError}` : `Demo-data · ${matches.length} kamper`}
-      </div>
+
 
       <nav className="tabs">
         <button className={tab === "kamper" ? "active" : ""} onClick={() => setTab("kamper")}>Kamper</button>
