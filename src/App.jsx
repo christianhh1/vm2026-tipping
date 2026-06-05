@@ -19,7 +19,8 @@ const MOCK_MATCHES = [
 async function fetchMatches() {
   const res = await fetch("/api/matches");
   if (!res.ok) throw new Error(`API-feil: ${res.status}`);
-  return await res.json(); }
+  return await res.json();
+ }
 
 // ─── SCORING ──────────────────────────────────────────────────────────────────
 const ROUND_POINTS = {
@@ -32,7 +33,7 @@ function getRoundKey(match) {
   if (r.includes("semi")) return "semi";
   if (r.includes("quarter") || r === "qf") return "qf";
   if (r === "r8") return "r8";
-  if (r.includes("16") || r === "r16") return "r16";
+  if (r === "r16") return "r16";
   return "group";
 }
 
@@ -85,9 +86,10 @@ const ROUND_LABELS = { group_1:"Runde 1", group_2:"Runde 2", group_3:"Runde 3", 
 function getRoundSection(match) {
   const rk = getRoundKey(match);
   if (rk !== "group") return rk;
+  // For group stage, use matchday field (1, 2 or 3)
   const md = match.matchday;
-  if (md === 2) return "group_2";
   if (md === 3) return "group_3";
+  if (md === 2) return "group_2";
   return "group_1";
 }
 
