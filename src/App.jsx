@@ -19,8 +19,7 @@ const MOCK_MATCHES = [
 async function fetchMatches() {
   const res = await fetch("/api/matches");
   if (!res.ok) throw new Error(`API-feil: ${res.status}`);
-  return await res.json();
- }
+  return await res.json() } 
 
 // ─── SCORING ──────────────────────────────────────────────────────────────────
 const ROUND_POINTS = {
@@ -719,6 +718,7 @@ export default function App() {
         <button className={tab === "vinner" ? "active" : ""} onClick={() => setTab("vinner")}>🌍 VM-vinner</button>
         <button className={tab === "ledertavle" ? "active" : ""} onClick={() => setTab("ledertavle")}>Ledertavle</button>
         <button className={tab === "ligaer" ? "active" : ""} onClick={() => setTab("ligaer")}>🏆 Ligaer</button>
+        <button className={tab === "regler" ? "active" : ""} onClick={() => setTab("regler")}>📋 Regler</button>
       </nav>
 
       {tab === "kamper" && (
@@ -743,6 +743,15 @@ export default function App() {
       {tab === "vinner" && <WinnerPick currentUser={username} matches={matches} allWinnerPicks={allWinnerPicks} onSaved={loadAllData} />}
       {tab === "ledertavle" && <Leaderboard allPicks={allPicks} matches={matches} allWinnerPicks={allWinnerPicks} />}
       {tab === "ligaer" && <LeaguePanel currentUser={username} allPicks={allPicks} matches={matches} allWinnerPicks={allWinnerPicks} />}
+
+      {tab === "regler" && (
+        <div className="rules-panel">
+          <h2 className="lb-title">📋 Regler</h2>
+          <div className="rules-content">
+            <p>Regler kommer snart...</p>
+          </div>
+        </div>
+      )}
 
       <footer className="footer">© Copyright Christian Herbertdinho Herbert</footer>
 
@@ -912,4 +921,6 @@ const CSS = `
   .leave-btn { margin-top: 20px; background: transparent; border: 1px solid rgba(255,61,61,0.3); color: var(--red); padding: 9px 18px; border-radius: 8px; cursor: pointer; font-family: inherit; font-size: 0.85rem; transition: all .2s; }
   .leave-btn:hover { background: rgba(255,61,61,0.1); }
   .footer { text-align: center; padding: 30px 0 10px; font-size: 0.75rem; color: var(--muted); }
+  .rules-panel { padding: 20px 0; max-width: 680px; }
+  .rules-content { background: var(--card); border: 1px solid var(--card-border); border-radius: 16px; padding: 24px 28px; line-height: 1.8; font-size: 0.95rem; white-space: pre-wrap; }
 `;
