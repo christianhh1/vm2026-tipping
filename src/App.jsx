@@ -19,7 +19,7 @@ const MOCK_MATCHES = [
 async function fetchMatches() {
   const res = await fetch("/api/matches");
   if (!res.ok) throw new Error(`API-feil: ${res.status}`);
-  return await res.json() }
+  return await res.json(); }
 
 // ─── SCORING ──────────────────────────────────────────────────────────────────
 const ROUND_POINTS = {
@@ -665,11 +665,7 @@ export default function App() {
     setUsername(""); setAllPicks({}); setAllWinnerPicks({});
   }
 
-  const filteredMatches = matches.filter(m => {
-    if (filter === "kommende") return !hasStarted(m.kickoff);
-    if (filter === "ferdig") return m.status === "FINISHED";
-    return true;
-  });
+  const filteredMatches = filter === "alle" ? matches : matches.filter(m => getRoundSection(m) === filter);
 
   if (authLoading) return (
     <div className="auth-bg" style={{justifyContent:"center",alignItems:"center",display:"flex"}}>
@@ -725,12 +721,16 @@ export default function App() {
 
       {tab === "kamper" && (
         <>
-          <div className="filter-bar">
-            {["alle","kommende","ferdig"].map(f => (
-              <button key={f} className={filter === f ? "active" : ""} onClick={() => setFilter(f)}>
-                {f.charAt(0).toUpperCase() + f.slice(1)}
-              </button>
-            ))}
+          <div className="round-tabs">
+            <button className={filter === "alle" ? "active" : ""} onClick={() => setFilter("alle")}>Alle</button>
+            <button className={filter === "group_1" ? "active" : ""} onClick={() => setFilter("group_1")}>Runde 1</button>
+            <button className={filter === "group_2" ? "active" : ""} onClick={() => setFilter("group_2")}>Runde 2</button>
+            <button className={filter === "group_3" ? "active" : ""} onClick={() => setFilter("group_3")}>Runde 3</button>
+            <button className={filter === "r16" ? "active" : ""} onClick={() => setFilter("r16")}>16-delsfinale</button>
+            <button className={filter === "r8" ? "active" : ""} onClick={() => setFilter("r8")}>8-delsfinale</button>
+            <button className={filter === "qf" ? "active" : ""} onClick={() => setFilter("qf")}>Kvartfinale</button>
+            <button className={filter === "semi" ? "active" : ""} onClick={() => setFilter("semi")}>Semifinale</button>
+            <button className={filter === "final" ? "active" : ""} onClick={() => setFilter("final")}>Finale</button>
           </div>
           {matchesLoading ? <div className="loading-state">⏳ Laster kamper…</div>
            : matchesError ? <div className="error-state">⚠️ {matchesError}</div>
@@ -789,7 +789,10 @@ const CSS = `
   .tabs { display: flex; gap: 4px; margin: 16px 0 4px; flex-wrap: wrap; }
   .tabs button, .filter-bar button { padding: 8px 18px; background: transparent; border: 1px solid var(--card-border); border-radius: 8px; color: var(--muted); cursor: pointer; font-family: inherit; font-size: 0.88rem; transition: all .2s; }
   .tabs button.active, .filter-bar button.active { background: var(--green); border-color: var(--green); color: #000; font-weight: 700; }
-  .filter-bar { display: flex; gap: 6px; margin-bottom: 16px; }
+  .round-tabs { display: flex; gap: 6px; margin: 12px 0 16px; flex-wrap: wrap; }
+  .round-tabs button { padding: 7px 14px; background: transparent; border: 1px solid var(--card-border); border-radius: 8px; color: var(--muted); cursor: pointer; font-family: inherit; font-size: 0.82rem; transition: all .2s; white-space: nowrap; }
+  .round-tabs button.active { background: var(--gold); border-color: var(--gold); color: #000; font-weight: 700; }
+  .round-tabs button:hover:not(.active) { border-color: rgba(255,214,0,0.4); color: var(--gold); }
 
   .loading-state, .error-state { text-align: center; padding: 40px; color: var(--muted); font-size: 0.95rem; }
   .error-state { color: var(--red); }
