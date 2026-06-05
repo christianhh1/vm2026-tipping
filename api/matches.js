@@ -24,7 +24,7 @@ export default async function handler(req, res) {
       homeScore: m.score?.fullTime?.home ?? null,
       awayScore: m.score?.fullTime?.away ?? null,
       group: m.group ? m.group.replace("GROUP_", "") : null,
-      round: stageToRound(m.stage),
+      round: stageToRound(m.stage, m.utcDate, m.matchday),
       matchday: m.matchday ?? null,
       stage: m.stage ?? null,
     }));
@@ -35,11 +35,31 @@ export default async function handler(req, res) {
   }
 }
 
-function stageToRound(stage) {
+function stageToRound(stage, date, matchday) {
+  // Fallback basert på dato for VM 2026
+  if (date) {
+    const d = new Date(date);
+    const month = d.getMonth() + 1; // 1-indexed
+    const day = d.getDate();
+    // Finale: 19 juli
+    if (month === 7 && day >= 18) return "final";
+    // Semifinale: 14-16 juli
+    if (month === 7 && day >= 14) return "semi";
+    // Kvartfinale: 10-12 juli
+    if (month === 7 && day >= 9) return "qf";
+    // 8-delsfinale: 5-8 juli
+    if (month === 7 && day >= 4) return "r8";
+    // 16-delsfinale: 29 juni - 3 juli
+    if ((month === 6 && day >= 29) || (month === 7 && day <= 3)) return "r16";
+    // Gruppespill: matchday bestemmer runde
+    if (matchday === 3) return "group";
+    if (matchday === 2) return "group";
+    return "group";
+  }
+
   if (!stage) return "group";
   const s = stage.toUpperCase();
   if (s.includes("GROUP")) return "group";
-  // VM 2026 har 48 lag: runde av 32 = 16-delsfinale, runde av 16 = 8-delsfinale
   if (s === "ROUND_OF_32" || s.includes("LAST_32")) return "r16";
   if (s === "ROUND_OF_16" || s.includes("LAST_16")) return "r8";
   if (s.includes("QUARTER")) return "qf";
