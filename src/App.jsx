@@ -245,7 +245,7 @@ function Leaderboard({ allPicks, matches, memberFilter, allWinnerPicks }) {
     const winnerBonus = vmWinner && winnerPick === vmWinner ? 5 : 0;
     pts += winnerBonus;
     return { user, pts, exact, correct, winnerPick, winnerBonus };
-  }).sort((a, b) => b.pts - a.pts);
+  }).sort((a, b) => b.pts - a.pts || b.exact - a.exact);
 
   return (
     <div className="leaderboard">
@@ -443,7 +443,7 @@ function LeaguePanel({ currentUser, allPicks, matches, allWinnerPicks }) {
       const vmWinner = finalMatch ? (finalMatch.homeScore > finalMatch.awayScore ? finalMatch.home : finalMatch.homeScore < finalMatch.awayScore ? finalMatch.away : null) : null;
       if (vmWinner && winnerPick === vmWinner) pts += 5;
       return { user, pts, exact, correct };
-    }).sort((a, b) => b.pts - a.pts);
+    }).sort((a, b) => b.pts - a.pts || b.exact - a.exact);
 
     return (
       <div className="league-panel">
