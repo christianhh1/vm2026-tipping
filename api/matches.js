@@ -39,6 +39,7 @@ function stageToRound(date) {
   const d = new Date(date);
   const month = d.getUTCMonth() + 1;
   const day = d.getUTCDate();
+  const hour = d.getUTCHours();
 
   // Finale: 19 juli
   if (month === 7 && day === 19) return "final";
@@ -46,13 +47,14 @@ function stageToRound(date) {
   if (month === 7 && day >= 14 && day <= 15) return "semi";
   // Kvartfinale: 9-11 juli
   if (month === 7 && day >= 9 && day <= 11) return "qf";
-  // 8-delsfinale: 4 juli kl 12:00 UTC - 7 juli
+  // 8-delsfinale: 4 juli kl 12:00 UTC og utover, samt 5-7 juli
   if (month === 7 && day === 4 && hour >= 12) return "r8";
   if (month === 7 && day >= 5 && day <= 7) return "r8";
-  // 16-delsfinale: 28 juni kl 18:00 UTC - 4 juli kl 11:59 UTC
+  // 16-delsfinale: 28 juni kl 18:00 UTC og utover, 29 juni - 3 juli, 4 juli før kl 12:00 UTC
   if (month === 6 && day === 28 && hour >= 18) return "r16";
-  if ((month === 6 && day >= 29) || (month === 7 && day <= 3)) return "r16";
+  if (month === 6 && day >= 29) return "r16";
+  if (month === 7 && day <= 3) return "r16";
   if (month === 7 && day === 4 && hour < 12) return "r16";
-  // Gruppespill: 11-27 juni
+  // Alt annet er gruppespill
   return "group";
 }
