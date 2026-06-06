@@ -1025,8 +1025,8 @@ const CSS = `
   @media (max-width: 750px) { .matches-grid { grid-template-columns: repeat(2, 1fr); } }
   @media (max-width: 480px) { .matches-grid { grid-template-columns: 1fr; } }
 
-  /* SMOOTH SCROLL */
-  html { scroll-behavior: smooth; }
+  /* SMOOTH SCROLL - kun mobil */
+  @media (hover: none) { html { scroll-behavior: smooth; } }
 
   /* LIGHT MODE */
   .light-mode { background: #f0f7f2; color: #1a2e22; }
