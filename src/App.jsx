@@ -19,7 +19,8 @@ const MOCK_MATCHES = [
 async function fetchMatches() {
   const res = await fetch("/api/matches");
   if (!res.ok) throw new Error(`API-feil: ${res.status}`);
-  return await res.json(); }
+  return await res.json();
+ }
 
 // ─── SCORING ──────────────────────────────────────────────────────────────────
 const ROUND_POINTS = {
@@ -92,7 +93,52 @@ function getRoundSection(match) {
   return "group_1";
 }
 
-// ─── MATCH CARD ───────────────────────────────────────────────────────────────
+// ─── COUNTDOWN TIMER ─────────────────────────────────────────────────────────
+function Countdown({ kickoff }) {
+  const [timeLeft, setTimeLeft] = useState("");
+  useEffect(() => {
+    function update() {
+      const diff = new Date(kickoff) - new Date();
+      if (diff <= 0) { setTimeLeft(""); return; }
+      const h = Math.floor(diff / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      const s = Math.floor((diff % 60000) / 1000);
+      if (h > 0) setTimeLeft(`${h}t ${m}m`);
+      else if (m > 0) setTimeLeft(`${m}m ${s}s`);
+      else setTimeLeft(`${s}s`);
+    }
+    update();
+    const id = setInterval(update, 1000);
+    return () => clearInterval(id);
+  }, [kickoff]);
+  if (!timeLeft) return null;
+  return <div className="countdown">⏱ {timeLeft}</div>;
+}
+
+// ─── CONFETTI ────────────────────────────────────────────────────────────────
+function Confetti() {
+  const colors = ["#ffd600","#00c853","#ff3d3d","#ffffff","#00b0ff"];
+  const pieces = Array.from({length: 40}, (_, i) => ({
+    id: i,
+    color: colors[i % colors.length],
+    left: Math.random() * 100,
+    delay: Math.random() * 0.8,
+    duration: 1.2 + Math.random() * 0.8,
+    size: 6 + Math.random() * 8,
+  }));
+  return (
+    <div className="confetti-container">
+      {pieces.map(p => (
+        <div key={p.id} className="confetti-piece" style={{
+          left: `${p.left}%`, background: p.color,
+          width: p.size, height: p.size,
+          animationDelay: `${p.delay}s`,
+          animationDuration: `${p.duration}s`,
+        }} />
+      ))}
+    </div>
+  );
+}
 function MatchCard({ match, currentUser, allPicks }) {
   const myPick = allPicks[currentUser]?.[match.id];
   const started = hasStarted(match.kickoff);
@@ -128,13 +174,23 @@ function MatchCard({ match, currentUser, allPicks }) {
     else alert("Feil ved lagring: " + error.message);
   }
 
+  const isLive = match.status === "LIVE";
+  const showConfetti = pts !== null && pts === maxPts;
+
   return (
-    <div className={`match-card ${match.status === "FINISHED" ? "finished" : started ? "live" : ""}`}>
+    <div className={`match-card ${match.status === "FINISHED" ? "finished" : isLive ? "live" : ""}`} style={{position:"relative"}}>
+      {showConfetti && <Confetti />}
       <div style={{display:"flex", justifyContent:"space-between", alignItems:"center"}}>
         <div className="match-group-badge">{match.group ? `Gruppe ${match.group}` : roundLabel(match.round)}</div>
-        <div className="pts-info">{base}+{bonus}p</div>
+        <div style={{display:"flex", alignItems:"center", gap:6}}>
+          {isLive && <span className="live-pulse"><span className="live-dot" /></span>}
+          <div className="pts-info">{base}+{bonus}p</div>
+        </div>
       </div>
-      <div className="match-time">{formatKickoff(match.kickoff)}</div>
+      <div className="match-time">
+        {formatKickoff(match.kickoff)}
+        {!started && <Countdown kickoff={match.kickoff} />}
+      </div>
       <div className="match-teams">
         <div className="team"><img src={match.homeFlagUrl} alt={match.home} className="flag" /><span>{match.home}</span></div>
         <div className="match-vs">VS</div>
@@ -681,6 +737,7 @@ export default function App() {
   const [allWinnerPicks, setAllWinnerPicks] = useState({});
   const [tab, setTab] = useState("kamper");
   const [filter, setFilter] = useState("alle");
+  const [darkMode, setDarkMode] = useState(true);
   const [authUsername, setAuthUsername] = useState("");
   const [authPassword, setAuthPassword] = useState("");
   const [authError, setAuthError] = useState("");
@@ -804,7 +861,7 @@ export default function App() {
   );
 
   return (
-    <div className="app">
+    <div className={`app ${darkMode ? "" : "light-mode"}`}>
       <header className="header">
         <div className="header-left">
           <span className="header-logo">⚽</span>
@@ -813,7 +870,12 @@ export default function App() {
             <div className="header-user">Hei, {username}!</div>
           </div>
         </div>
-        <button className="logout-btn" onClick={logout}>Logg ut</button>
+        <div style={{display:"flex", gap:8, alignItems:"center"}}>
+          <button className="theme-toggle" onClick={() => setDarkMode(!darkMode)} title="Bytt tema">
+            {darkMode ? "☀️" : "🌙"}
+          </button>
+          <button className="logout-btn" onClick={logout}>Logg ut</button>
+        </div>
       </header>
 
 
@@ -963,10 +1025,47 @@ const CSS = `
   @media (max-width: 750px) { .matches-grid { grid-template-columns: repeat(2, 1fr); } }
   @media (max-width: 480px) { .matches-grid { grid-template-columns: 1fr; } }
 
-  .match-card { background: var(--card); border: 1px solid var(--card-border); border-radius: 16px; padding: 18px; display: flex; flex-direction: column; gap: 10px; transition: transform .2s, border-color .2s; }
-  .match-card:hover { transform: translateY(-2px); border-color: rgba(0,200,83,0.3); }
-  .match-card.finished { border-color: rgba(255,214,0,0.2); }
-  .match-card.live { border-color: var(--red); box-shadow: 0 0 12px rgba(255,61,61,0.2); }
+  /* SMOOTH SCROLL */
+  html { scroll-behavior: smooth; }
+
+  /* LIGHT MODE */
+  .light-mode { background: #f0f7f2; color: #1a2e22; }
+  .light-mode .header { border-color: rgba(0,0,0,0.1); }
+  .light-mode .match-card { background: rgba(255,255,255,0.85); border-color: rgba(0,0,0,0.1); color: #1a2e22; }
+  .light-mode .match-card:hover { border-color: rgba(0,150,50,0.4); }
+  .light-mode .auth-bg { background: radial-gradient(ellipse at 40% 30%, #d0eed8 0%, #a8d5b5 100%); }
+  .light-mode .auth-card { background: rgba(255,255,255,0.9); border-color: rgba(0,0,0,0.1); }
+  .light-mode .auth-input { background: rgba(0,0,0,0.05); border-color: rgba(0,0,0,0.15); color: #1a2e22; }
+  .light-mode .tabs button, .light-mode .round-tabs button { color: #4a7a5a; border-color: rgba(0,0,0,0.15); }
+  .light-mode .score-input { background: rgba(0,0,0,0.06); border-color: rgba(0,0,0,0.15); color: #1a2e22; }
+  .light-mode .lb-table td { border-color: rgba(0,0,0,0.07); }
+  .light-mode .league-item { background: rgba(255,255,255,0.8); border-color: rgba(0,0,0,0.1); }
+  .light-mode .rule-section { background: rgba(255,255,255,0.8); border-color: rgba(0,0,0,0.08); }
+  .light-mode .muted, .light-mode .pick-label, .light-mode .match-time { color: #4a7a5a; }
+
+  /* GLASSMORPHISM */
+  .match-card { background: rgba(255,255,255,0.07); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.12); border-radius: 16px; padding: 18px; display: flex; flex-direction: column; gap: 10px; transition: transform .2s, border-color .2s, box-shadow .2s; }
+  .match-card:hover { transform: translateY(-3px); border-color: rgba(0,200,83,0.35); box-shadow: 0 8px 32px rgba(0,0,0,0.25); }
+  .match-card.finished { border-color: rgba(255,214,0,0.25); background: rgba(255,214,0,0.04); }
+  .match-card.live { border-color: rgba(255,61,61,0.6); box-shadow: 0 0 20px rgba(255,61,61,0.25); }
+
+  /* LIVE PULSE */
+  .live-pulse { display: flex; align-items: center; }
+  .live-dot { width: 8px; height: 8px; background: var(--red); border-radius: 50%; display: block; animation: pulse 1.2s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.6);opacity:0.5} }
+
+  /* COUNTDOWN */
+  .countdown { font-size: 0.75rem; color: var(--green); font-weight: 700; margin-top: 2px; }
+
+  /* CONFETTI */
+  .confetti-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; overflow: hidden; border-radius: 16px; }
+  .confetti-piece { position: absolute; top: -10px; border-radius: 2px; animation: confetti-fall linear forwards; }
+  @keyframes confetti-fall { 0%{transform:translateY(0) rotate(0deg);opacity:1} 100%{transform:translateY(200px) rotate(720deg);opacity:0} }
+
+  /* THEME TOGGLE */
+  .theme-toggle { background: rgba(255,255,255,0.1); border: 1px solid var(--card-border); border-radius: 8px; padding: 6px 10px; cursor: pointer; font-size: 1rem; transition: all .2s; }
+  .theme-toggle:hover { background: rgba(255,255,255,0.2); }
+
   .match-group-badge { display: inline-block; background: rgba(0,200,83,0.15); color: var(--green); font-size: 0.7rem; font-weight: 700; padding: 3px 8px; border-radius: 4px; width: fit-content; letter-spacing: 1px; }
   .pts-info { font-size: 0.72rem; color: var(--muted); font-weight: 600; background: rgba(255,255,255,0.06); padding: 3px 7px; border-radius: 4px; }
   .match-time { font-size: 0.78rem; color: var(--muted); }
