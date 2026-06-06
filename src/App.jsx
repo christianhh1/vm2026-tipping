@@ -762,6 +762,12 @@ export default function App() {
   const [search, setSearch] = useState("");
 
   const filteredMatches = matches.filter(m => {
+    if (filter === "next24") {
+      const kickoff = new Date(m.kickoff);
+      const now = new Date();
+      const in24h = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+      return kickoff >= now && kickoff <= in24h;
+    }
     const matchesRound = filter === "alle" || getRoundSection(m) === filter;
     const matchesSearch = search.trim() === "" ||
       m.home.toLowerCase().includes(search.toLowerCase()) ||
@@ -831,6 +837,7 @@ export default function App() {
           />
           <div className="round-tabs">
             <button className={filter === "alle" ? "active" : ""} onClick={() => setFilter("alle")}>Alle</button>
+            <button className={filter === "next24" ? "active" : ""} onClick={() => setFilter("next24")}>⏰ Neste 24t</button>
             <button className={filter === "group_1" ? "active" : ""} onClick={() => setFilter("group_1")}>Runde 1</button>
             <button className={filter === "group_2" ? "active" : ""} onClick={() => setFilter("group_2")}>Runde 2</button>
             <button className={filter === "group_3" ? "active" : ""} onClick={() => setFilter("group_3")}>Runde 3</button>
