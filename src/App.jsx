@@ -142,8 +142,8 @@ function Confetti() {
 function MatchCard({ match, currentUser, allPicks }) {
   const myPick = allPicks[currentUser]?.[match.id];
   const started = hasStarted(match.kickoff);
-  const [home, setHome] = useState(myPick?.home_score ?? "");
-  const [away, setAway] = useState(myPick?.away_score ?? "");
+  const [home, setHome] = useState(myPick?.home_score ?? 0);
+  const [away, setAway] = useState(myPick?.away_score ?? 0);
   const [qualifier, setQualifier] = useState(myPick?.qualifier ?? "");
   const [saved, setSaved] = useState(!!myPick);
   const [editing, setEditing] = useState(false);
@@ -159,7 +159,7 @@ function MatchCard({ match, currentUser, allPicks }) {
   const countPicked = Object.values(allPicks).filter(u => u[match.id]).length;
 
   async function savePick() {
-    if (home === "" || away === "") return;
+    if (home === "" || away === "" || home === null || away === null) return;
     if (needsQualifier && !qualifier) return;
     setSaving(true);
     const { error } = await sb.from("picks").upsert({
