@@ -926,7 +926,7 @@ const CSS = `
   .auth-btn:hover:not(:disabled) { background: var(--green-dark); color: #fff; }
   .auth-btn:disabled { opacity: 0.6; cursor: default; }
 
-  .app { max-width: 900px; margin: 0 auto; padding: 0 16px 40px; }
+  .app { max-width: 1400px; margin: 0 auto; padding: 0 24px 40px; }
   .header { display: flex; align-items: center; justify-content: space-between; padding: 20px 0 12px; border-bottom: 1px solid var(--card-border); }
   .header-left { display: flex; align-items: center; gap: 12px; }
   .header-logo { font-size: 32px; }
@@ -951,7 +951,10 @@ const CSS = `
   .round-heading { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
   .round-heading-text { font-family: 'Bebas Neue', cursive; font-size: 1.3rem; letter-spacing: 2px; color: var(--gold); white-space: nowrap; }
   .round-heading::after { content: ''; flex: 1; height: 1px; background: rgba(255,214,0,0.2); }
-  .matches-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+  .matches-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  @media (max-width: 1100px) { .matches-grid { grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 750px) { .matches-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 480px) { .matches-grid { grid-template-columns: 1fr; } }
 
   .match-card { background: var(--card); border: 1px solid var(--card-border); border-radius: 16px; padding: 18px; display: flex; flex-direction: column; gap: 10px; transition: transform .2s, border-color .2s; }
   .match-card:hover { transform: translateY(-2px); border-color: rgba(0,200,83,0.3); }
