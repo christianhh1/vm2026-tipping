@@ -818,7 +818,7 @@ export default function App() {
         <button className={tab === "ledertavle" ? "active" : ""} onClick={() => setTab("ledertavle")}>Ledertavle</button>
         <button className={tab === "ligaer" ? "active" : ""} onClick={() => setTab("ligaer")}>🏆 Ligaer</button>
         <button className={tab === "regler" ? "active" : ""} onClick={() => setTab("regler")}>📋 Regler</button>
-        {username === "herbertdinho" && <button className={tab === "admin" ? "active" : ""} onClick={() => setTab("admin")}>⚙️ Admin</button>}
+        {username.toLowerCase() === "herbertdinho" && <button className={tab === "admin" ? "active" : ""} onClick={() => setTab("admin")}>⚙️ Admin</button>}
       </nav>
 
       {tab === "kamper" && (
@@ -849,7 +849,7 @@ export default function App() {
       {tab === "vinner" && <WinnerPick currentUser={username} matches={matches} allWinnerPicks={allWinnerPicks} onSaved={loadAllData} />}
       {tab === "ledertavle" && <Leaderboard allPicks={allPicks} matches={matches} allWinnerPicks={allWinnerPicks} />}
       {tab === "ligaer" && <LeaguePanel currentUser={username} allPicks={allPicks} matches={matches} allWinnerPicks={allWinnerPicks} />}
-      {tab === "admin" && username === "herbertdinho" && <AdminPanel />}
+      {tab === "admin" && username.toLowerCase() === "herbertdinho" && <AdminPanel />}
 
       {tab === "regler" && (
         <div className="rules-panel">
