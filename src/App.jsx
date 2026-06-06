@@ -672,7 +672,15 @@ export default function App() {
     setUsername(""); setAllPicks({}); setAllWinnerPicks({});
   }
 
-  const filteredMatches = filter === "alle" ? matches : matches.filter(m => getRoundSection(m) === filter);
+  const [search, setSearch] = useState("");
+
+  const filteredMatches = matches.filter(m => {
+    const matchesRound = filter === "alle" || getRoundSection(m) === filter;
+    const matchesSearch = search.trim() === "" ||
+      m.home.toLowerCase().includes(search.toLowerCase()) ||
+      m.away.toLowerCase().includes(search.toLowerCase());
+    return matchesRound && matchesSearch;
+  });
 
   if (authLoading) return (
     <div className="auth-bg" style={{justifyContent:"center",alignItems:"center",display:"flex"}}>
@@ -727,6 +735,12 @@ export default function App() {
 
       {tab === "kamper" && (
         <>
+          <input
+            className="search-input"
+            placeholder="🔍 Søk etter lag…"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
           <div className="round-tabs">
             <button className={filter === "alle" ? "active" : ""} onClick={() => setFilter("alle")}>Alle</button>
             <button className={filter === "group_1" ? "active" : ""} onClick={() => setFilter("group_1")}>Runde 1</button>
@@ -835,7 +849,9 @@ const CSS = `
   .tabs { display: flex; gap: 4px; margin: 16px 0 4px; flex-wrap: wrap; }
   .tabs button, .filter-bar button { padding: 8px 18px; background: transparent; border: 1px solid var(--card-border); border-radius: 8px; color: var(--muted); cursor: pointer; font-family: inherit; font-size: 0.88rem; transition: all .2s; }
   .tabs button.active, .filter-bar button.active { background: var(--green); border-color: var(--green); color: #000; font-weight: 700; }
-  .round-tabs { display: flex; gap: 6px; margin: 12px 0 16px; flex-wrap: wrap; }
+  .search-input { width: 100%; max-width: 400px; padding: 10px 16px; background: rgba(255,255,255,0.07); border: 1px solid var(--card-border); border-radius: 10px; color: var(--text); font-family: inherit; font-size: 0.92rem; outline: none; transition: border .2s; margin: 12px 0 8px; display: block; }
+  .search-input:focus { border-color: var(--green); }
+  .round-tabs { display: flex; gap: 6px; margin: 0 0 16px; flex-wrap: wrap; }
   .round-tabs button { padding: 7px 14px; background: transparent; border: 1px solid var(--card-border); border-radius: 8px; color: var(--muted); cursor: pointer; font-family: inherit; font-size: 0.82rem; transition: all .2s; white-space: nowrap; }
   .round-tabs button.active { background: var(--gold); border-color: var(--gold); color: #000; font-weight: 700; }
   .round-tabs button:hover:not(.active) { border-color: rgba(255,214,0,0.4); color: var(--gold); }
