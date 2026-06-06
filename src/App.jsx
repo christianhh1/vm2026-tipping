@@ -231,6 +231,10 @@ function Leaderboard({ allPicks, matches, memberFilter, allWinnerPicks }) {
   const finalMatch = matches.find(m => m.round === "final" && m.status === "FINISHED");
   const vmWinner = finalMatch ? (finalMatch.homeScore > finalMatch.awayScore ? finalMatch.home : finalMatch.homeScore < finalMatch.awayScore ? finalMatch.away : null) : null;
 
+  // Skjul VM-tipp til første kamp er i gang
+  const firstKickoff = matches.length > 0 ? matches.reduce((a, b) => new Date(a.kickoff) < new Date(b.kickoff) ? a : b).kickoff : null;
+  const vmTippVisible = firstKickoff ? hasStarted(firstKickoff) : false;
+
   const scores = users.map(user => {
     let pts = 0, exact = 0, correct = 0;
     matches.forEach(m => {
@@ -252,7 +256,7 @@ function Leaderboard({ allPicks, matches, memberFilter, allWinnerPicks }) {
       <h2 className="lb-title">🏆 Ledertavle</h2>
       {scores.length === 0 ? <p className="lb-empty">Ingen resultater ennå</p> : (
         <table className="lb-table">
-          <thead><tr><th>#</th><th>Spiller</th><th>Poeng</th><th>Eksakt</th><th>Riktig</th><th>VM-tipp</th></tr></thead>
+          <thead><tr><th>#</th><th>Spiller</th><th>Poeng</th><th>Eksakt</th><th>Riktig</th>{vmTippVisible && <th>VM-tipp</th>}</tr></thead>
           <tbody>
             {scores.map((s, i) => (
               <tr key={s.user} className={i === 0 ? "lb-first" : ""}>
@@ -261,7 +265,7 @@ function Leaderboard({ allPicks, matches, memberFilter, allWinnerPicks }) {
                 <td><strong>{s.pts}</strong></td>
                 <td>{s.exact}</td>
                 <td>{s.correct}</td>
-                <td style={{fontSize:"0.78rem"}}>{s.winnerPick || <span style={{color:"var(--muted)"}}>–</span>}{s.winnerBonus > 0 && <span className="pts pts-3" style={{marginLeft:4}}>+5</span>}</td>
+                {vmTippVisible && <td style={{fontSize:"0.78rem"}}>{s.winnerPick || <span style={{color:"var(--muted)"}}>–</span>}{s.winnerBonus > 0 && <span className="pts pts-3" style={{marginLeft:4}}>+5</span>}</td>}
               </tr>
             ))}
           </tbody>
