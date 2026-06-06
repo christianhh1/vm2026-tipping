@@ -581,6 +581,89 @@ function MatchesByRound({ matches, currentUser, allPicks }) {
   );
 }
 
+// ─── ADMIN PANEL ──────────────────────────────────────────────────────────────
+function AdminPanel() {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [resetTarget, setResetTarget] = useState(null);
+  const [newPassword, setNewPassword] = useState("");
+  const [msg, setMsg] = useState({ text: "", type: "" });
+  const [working, setWorking] = useState(false);
+
+  useEffect(() => { loadUsers(); }, []);
+
+  async function loadUsers() {
+    setLoading(true);
+    const { data } = await sb.from("profiles").select("username").order("username");
+    setUsers(data || []);
+    setLoading(false);
+  }
+
+  async function resetPassword() {
+    if (!newPassword || newPassword.length < 4) { setMsg({ text: "Passord må ha minst 4 tegn.", type: "error" }); return; }
+    setWorking(true);
+    // Find user's auth id via profile
+    const { data: profile } = await sb.from("profiles").select("id").eq("username", resetTarget).single();
+    if (!profile) { setMsg({ text: "Fant ikke brukeren.", type: "error" }); setWorking(false); return; }
+    // Use admin update - works via service role, otherwise update password via email trick
+    const { error } = await sb.auth.admin?.updateUserById(profile.id, { password: newPassword });
+    if (error) {
+      // Fallback: update directly in auth via RPC if admin not available
+      setMsg({ text: "Kunne ikke resette via admin API. Slett brukeren og la dem registrere seg på nytt.", type: "error" });
+    } else {
+      setMsg({ text: `✅ Passord for ${resetTarget} er oppdatert!`, type: "success" });
+      setResetTarget(null); setNewPassword("");
+    }
+    setWorking(false);
+  }
+
+  async function deleteUser(username) {
+    if (!window.confirm(`Slett brukeren "${username}" permanent?`)) return;
+    const { data: profile } = await sb.from("profiles").select("id").eq("username", username).single();
+    if (profile) {
+      await sb.from("picks").delete().eq("username", username);
+      await sb.from("winner_picks").delete().eq("username", username);
+      await sb.from("profiles").delete().eq("username", username);
+    }
+    await loadUsers();
+    setMsg({ text: `Brukeren "${username}" er slettet.`, type: "success" });
+  }
+
+  return (
+    <div className="admin-panel">
+      <h2 className="lb-title">⚙️ Admin</h2>
+      {msg.text && <div className={msg.type === "success" ? "auth-success" : "auth-error"} style={{marginBottom:16}}>{msg.text}</div>}
+
+      {resetTarget && (
+        <div className="admin-reset-box">
+          <h3 className="form-title" style={{fontSize:"1.2rem"}}>Nytt passord for {resetTarget}</h3>
+          <input className="auth-input" type="password" placeholder="Nytt passord (min. 4 tegn)" value={newPassword}
+            onChange={e => setNewPassword(e.target.value)}
+            onKeyDown={e => e.key === "Enter" && resetPassword()} />
+          <div style={{display:"flex", gap:8}}>
+            <button className="auth-btn" style={{flex:1}} onClick={resetPassword} disabled={working}>
+              {working ? "Lagrer…" : "Sett nytt passord"}
+            </button>
+            <button className="cancel-btn" onClick={() => { setResetTarget(null); setNewPassword(""); setMsg({text:"",type:""}); }}>Avbryt</button>
+          </div>
+        </div>
+      )}
+
+      <div className="admin-user-list">
+        {loading ? <p className="lb-empty">Laster brukere…</p> : users.map(u => (
+          <div key={u.username} className="admin-user-row">
+            <span className="admin-username">{u.username}</span>
+            <div style={{display:"flex", gap:6}}>
+              <button className="edit-btn" onClick={() => { setResetTarget(u.username); setNewPassword(""); setMsg({text:"",type:""}); }}>🔑 Reset passord</button>
+              <button className="leave-btn" style={{marginTop:0, padding:"7px 12px", fontSize:"0.78rem"}} onClick={() => deleteUser(u.username)}>🗑 Slett</button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ─── MAIN APP ─────────────────────────────────────────────────────────────────
 export default function App() {
   const [session, setSession] = useState(null);
@@ -731,6 +814,7 @@ export default function App() {
         <button className={tab === "ledertavle" ? "active" : ""} onClick={() => setTab("ledertavle")}>Ledertavle</button>
         <button className={tab === "ligaer" ? "active" : ""} onClick={() => setTab("ligaer")}>🏆 Ligaer</button>
         <button className={tab === "regler" ? "active" : ""} onClick={() => setTab("regler")}>📋 Regler</button>
+        {username === "herbertdinho" && <button className={tab === "admin" ? "active" : ""} onClick={() => setTab("admin")}>⚙️ Admin</button>}
       </nav>
 
       {tab === "kamper" && (
@@ -761,6 +845,7 @@ export default function App() {
       {tab === "vinner" && <WinnerPick currentUser={username} matches={matches} allWinnerPicks={allWinnerPicks} onSaved={loadAllData} />}
       {tab === "ledertavle" && <Leaderboard allPicks={allPicks} matches={matches} allWinnerPicks={allWinnerPicks} />}
       {tab === "ligaer" && <LeaguePanel currentUser={username} allPicks={allPicks} matches={matches} allWinnerPicks={allWinnerPicks} />}
+      {tab === "admin" && username === "herbertdinho" && <AdminPanel />}
 
       {tab === "regler" && (
         <div className="rules-panel">
@@ -971,6 +1056,11 @@ const CSS = `
   .you-badge { background: rgba(0,200,83,0.15); color: var(--green); font-size: 0.65rem; font-weight: 700; padding: 2px 6px; border-radius: 4px; margin-left: 6px; vertical-align: middle; }
   .leave-btn { margin-top: 20px; background: transparent; border: 1px solid rgba(255,61,61,0.3); color: var(--red); padding: 9px 18px; border-radius: 8px; cursor: pointer; font-family: inherit; font-size: 0.85rem; transition: all .2s; }
   .leave-btn:hover { background: rgba(255,61,61,0.1); }
+  .admin-panel { padding: 20px 0; max-width: 600px; }
+  .admin-reset-box { background: var(--card); border: 1px solid var(--card-border); border-radius: 14px; padding: 20px; margin-bottom: 20px; display: flex; flex-direction: column; gap: 12px; }
+  .admin-user-list { display: flex; flex-direction: column; gap: 8px; }
+  .admin-user-row { background: var(--card); border: 1px solid var(--card-border); border-radius: 12px; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .admin-username { font-weight: 600; font-size: 0.95rem; }
   .footer { text-align: center; padding: 30px 0 10px; font-size: 0.75rem; color: var(--muted); }
   .rules-panel { padding: 20px 0; max-width: 680px; }
   .rules-content { display: flex; flex-direction: column; gap: 20px; }
