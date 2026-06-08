@@ -768,11 +768,16 @@ function AdminPanel({ onDataChanged }) {
 
   async function deleteUser(username) {
     if (!window.confirm(`Slett brukeren "${username}" permanent?`)) return;
-    const { data: profile } = await sb.from("profiles").select("id").eq("username", username).single();
-    if (profile) {
-      await sb.from("picks").delete().eq("username", username);
-      await sb.from("winner_picks").delete().eq("username", username);
-      await sb.from("profiles").delete().eq("username", username);
+    setMsg({ text: "Sletter...", type: "success" });
+    const res = await fetch("/api/delete-user", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, requester: "herbertdinho" })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      setMsg({ text: "Feil: " + data.error, type: "error" });
+      return;
     }
     await loadUsers();
     setMsg({ text: `Brukeren "${username}" er slettet.`, type: "success" });
