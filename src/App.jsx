@@ -641,6 +641,85 @@ function MatchesByRound({ matches, currentUser, allPicks }) {
   );
 }
 
+// ─── CHAT ─────────────────────────────────────────────────────────────────────
+function Chat({ currentUser }) {
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(true);
+  const bottomRef = useRef(null);
+
+  useEffect(() => {
+    loadMessages();
+    // Sanntid-oppdatering
+    const channel = sb.channel("chat").on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: "messages" },
+      () => loadMessages()
+    ).subscribe();
+    return () => sb.removeChannel(channel);
+  }, []);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  async function loadMessages() {
+    const { data } = await sb.from("messages").select("*").order("created_at", { ascending: true }).limit(200);
+    setMessages(data || []);
+    setLoading(false);
+  }
+
+  async function sendMessage() {
+    if (!input.trim()) return;
+    await sb.from("messages").insert({ username: currentUser, content: input.trim() });
+    setInput("");
+  }
+
+  async function deleteMessage(id) {
+    await sb.from("messages").delete().eq("id", id);
+  }
+
+  function formatTime(ts) {
+    const d = new Date(ts);
+    return d.toLocaleTimeString("nb-NO", { hour: "2-digit", minute: "2-digit" }) +
+      " · " + d.toLocaleDateString("nb-NO", { day: "numeric", month: "short" });
+  }
+
+  return (
+    <div className="chat-panel">
+      <h2 className="lb-title">💬 Chat</h2>
+      <div className="chat-messages">
+        {loading ? <p className="lb-empty">Laster meldinger…</p> :
+         messages.length === 0 ? <p className="lb-empty">Ingen meldinger ennå – vær den første! 👋</p> :
+         messages.map(m => (
+          <div key={m.id} className={`chat-msg ${m.username === currentUser ? "own" : ""}`}>
+            <div className="chat-bubble">
+              <span className="chat-username">{m.username}</span>
+              <span className="chat-text">{m.content}</span>
+              <span className="chat-time">{formatTime(m.created_at)}</span>
+            </div>
+            {m.username === currentUser && (
+              <button className="chat-delete" onClick={() => deleteMessage(m.id)} title="Slett">✕</button>
+            )}
+          </div>
+        ))}
+        <div ref={bottomRef} />
+      </div>
+      <div className="chat-input-row">
+        <input
+          className="chat-input"
+          placeholder="Skriv en melding…"
+          value={input}
+          onChange={e => setInput(e.target.value)}
+          onKeyDown={e => e.key === "Enter" && sendMessage()}
+          maxLength={300}
+        />
+        <button className="chat-send" onClick={sendMessage} disabled={!input.trim()}>Send</button>
+      </div>
+    </div>
+  );
+}
+
 // ─── ADMIN PANEL ──────────────────────────────────────────────────────────────
 function AdminPanel() {
   const [users, setUsers] = useState([]);
@@ -886,6 +965,7 @@ export default function App() {
         <button className={tab === "ledertavle" ? "active" : ""} onClick={() => setTab("ledertavle")}>Ledertavle</button>
         <button className={tab === "ligaer" ? "active" : ""} onClick={() => setTab("ligaer")}>🏆 Ligaer</button>
         <button className={tab === "regler" ? "active" : ""} onClick={() => setTab("regler")}>📋 Regler</button>
+        <button className={tab === "chat" ? "active" : ""} onClick={() => setTab("chat")}>💬 Chat</button>
         {username.toLowerCase() === "herbertdinho" && <button className={tab === "admin" ? "active" : ""} onClick={() => setTab("admin")}>⚙️ Admin</button>}
       </nav>
 
@@ -918,6 +998,7 @@ export default function App() {
       {tab === "vinner" && <WinnerPick currentUser={username} matches={matches} allWinnerPicks={allWinnerPicks} onSaved={loadAllData} />}
       {tab === "ledertavle" && <Leaderboard allPicks={allPicks} matches={matches} allWinnerPicks={allWinnerPicks} />}
       {tab === "ligaer" && <LeaguePanel currentUser={username} allPicks={allPicks} matches={matches} allWinnerPicks={allWinnerPicks} />}
+      {tab === "chat" && <Chat currentUser={username} />}
       {tab === "admin" && username.toLowerCase() === "herbertdinho" && <AdminPanel />}
 
       {tab === "regler" && (
@@ -1169,6 +1250,24 @@ const CSS = `
   .you-badge { background: rgba(0,200,83,0.15); color: var(--green); font-size: 0.65rem; font-weight: 700; padding: 2px 6px; border-radius: 4px; margin-left: 6px; vertical-align: middle; }
   .leave-btn { margin-top: 20px; background: transparent; border: 1px solid rgba(255,61,61,0.3); color: var(--red); padding: 9px 18px; border-radius: 8px; cursor: pointer; font-family: inherit; font-size: 0.85rem; transition: all .2s; }
   .leave-btn:hover { background: rgba(255,61,61,0.1); }
+  .chat-panel { padding: 20px 0; max-width: 680px; display: flex; flex-direction: column; gap: 16px; }
+  .chat-messages { background: rgba(255,255,255,0.04); border: 1px solid var(--card-border); border-radius: 16px; padding: 16px; min-height: 300px; max-height: 500px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+  .chat-msg { display: flex; align-items: flex-end; gap: 6px; }
+  .chat-msg.own { flex-direction: row-reverse; }
+  .chat-bubble { background: rgba(255,255,255,0.07); border: 1px solid var(--card-border); border-radius: 12px 12px 12px 4px; padding: 8px 12px; max-width: 75%; display: flex; flex-direction: column; gap: 2px; }
+  .chat-msg.own .chat-bubble { background: rgba(0,200,83,0.15); border-color: rgba(0,200,83,0.3); border-radius: 12px 12px 4px 12px; }
+  .chat-username { font-size: 0.72rem; font-weight: 700; color: var(--green); }
+  .chat-msg.own .chat-username { color: var(--green); text-align: right; }
+  .chat-text { font-size: 0.9rem; line-height: 1.4; word-break: break-word; }
+  .chat-time { font-size: 0.65rem; color: var(--muted); margin-top: 2px; }
+  .chat-delete { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 0.75rem; padding: 2px 4px; border-radius: 4px; transition: color .2s; flex-shrink: 0; }
+  .chat-delete:hover { color: var(--red); }
+  .chat-input-row { display: flex; gap: 8px; }
+  .chat-input { flex: 1; padding: 12px 16px; background: rgba(255,255,255,0.07); border: 1px solid var(--card-border); border-radius: 10px; color: var(--text); font-family: inherit; font-size: 0.92rem; outline: none; transition: border .2s; }
+  .chat-input:focus { border-color: var(--green); }
+  .chat-send { padding: 12px 20px; background: var(--green); border: none; border-radius: 10px; color: #000; font-weight: 700; cursor: pointer; font-family: inherit; font-size: 0.9rem; transition: all .2s; white-space: nowrap; }
+  .chat-send:hover:not(:disabled) { background: var(--green-dark); color: #fff; }
+  .chat-send:disabled { opacity: 0.4; cursor: default; }
   .admin-panel { padding: 20px 0; max-width: 600px; }
   .admin-reset-box { background: var(--card); border: 1px solid var(--card-border); border-radius: 14px; padding: 20px; margin-bottom: 20px; display: flex; flex-direction: column; gap: 12px; }
   .admin-user-list { display: flex; flex-direction: column; gap: 8px; }
