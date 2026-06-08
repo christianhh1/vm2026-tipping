@@ -279,7 +279,7 @@ function MatchCard({ match, currentUser, allPicks }) {
 }
 
 // ─── LEADERBOARD ──────────────────────────────────────────────────────────────
-function Leaderboard({ allPicks, matches, memberFilter, allWinnerPicks }) {
+function Leaderboard({ allPicks, matches, memberFilter, allWinnerPicks, allFullNames }) {
   const users = memberFilter
     ? Object.keys(allPicks).filter(u => memberFilter.includes(u))
     : Object.keys(allPicks);
@@ -312,12 +312,13 @@ function Leaderboard({ allPicks, matches, memberFilter, allWinnerPicks }) {
       <h2 className="lb-title">🏆 Ledertavle</h2>
       {scores.length === 0 ? <p className="lb-empty">Ingen resultater ennå</p> : (
         <table className="lb-table">
-          <thead><tr><th>#</th><th>Spiller</th><th>Poeng</th><th>Eksakt</th><th>Riktig</th>{vmTippVisible && <th>VM-tipp</th>}</tr></thead>
+          <thead><tr><th>#</th><th>Spiller</th><th>Ekte navn</th><th>Poeng</th><th>Eksakt</th><th>Riktig</th>{vmTippVisible && <th>VM-tipp</th>}</tr></thead>
           <tbody>
             {scores.map((s, i) => (
               <tr key={s.user} className={i === 0 ? "lb-first" : ""}>
                 <td>{i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : i + 1}</td>
                 <td>{s.user}</td>
+                <td style={{fontSize:"0.82rem", color:"var(--muted)"}}>{allFullNames?.[s.user] || "–"}</td>
                 <td><strong>{s.pts}</strong></td>
                 <td>{s.exact}</td>
                 <td>{s.correct}</td>
@@ -726,6 +727,8 @@ function AdminPanel() {
   const [loading, setLoading] = useState(true);
   const [resetTarget, setResetTarget] = useState(null);
   const [newPassword, setNewPassword] = useState("");
+  const [editingName, setEditingName] = useState(null);
+  const [newFullName, setNewFullName] = useState("");
   const [msg, setMsg] = useState({ text: "", type: "" });
   const [working, setWorking] = useState(false);
 
@@ -733,7 +736,7 @@ function AdminPanel() {
 
   async function loadUsers() {
     setLoading(true);
-    const { data } = await sb.from("profiles").select("username").order("username");
+    const { data } = await sb.from("profiles").select("username, full_name").order("username");
     setUsers(data || []);
     setLoading(false);
   }
@@ -741,19 +744,24 @@ function AdminPanel() {
   async function resetPassword() {
     if (!newPassword || newPassword.length < 4) { setMsg({ text: "Passord må ha minst 4 tegn.", type: "error" }); return; }
     setWorking(true);
-    // Find user's auth id via profile
     const { data: profile } = await sb.from("profiles").select("id").eq("username", resetTarget).single();
     if (!profile) { setMsg({ text: "Fant ikke brukeren.", type: "error" }); setWorking(false); return; }
-    // Use admin update - works via service role, otherwise update password via email trick
     const { error } = await sb.auth.admin?.updateUserById(profile.id, { password: newPassword });
     if (error) {
-      // Fallback: update directly in auth via RPC if admin not available
       setMsg({ text: "Kunne ikke resette via admin API. Slett brukeren og la dem registrere seg på nytt.", type: "error" });
     } else {
       setMsg({ text: `✅ Passord for ${resetTarget} er oppdatert!`, type: "success" });
       setResetTarget(null); setNewPassword("");
     }
     setWorking(false);
+  }
+
+  async function saveFullName() {
+    if (!editingName) return;
+    await sb.from("profiles").update({ full_name: newFullName.trim() || null }).eq("username", editingName);
+    await loadUsers();
+    setEditingName(null); setNewFullName("");
+    setMsg({ text: `✅ Navn oppdatert for ${editingName}`, type: "success" });
   }
 
   async function deleteUser(username) {
@@ -788,12 +796,29 @@ function AdminPanel() {
         </div>
       )}
 
+      {editingName && (
+        <div className="admin-reset-box">
+          <h3 className="form-title" style={{fontSize:"1.2rem"}}>Ekte navn for {editingName}</h3>
+          <input className="auth-input" placeholder="Fullt navn" value={newFullName}
+            onChange={e => setNewFullName(e.target.value)}
+            onKeyDown={e => e.key === "Enter" && saveFullName()} />
+          <div style={{display:"flex", gap:8}}>
+            <button className="auth-btn" style={{flex:1}} onClick={saveFullName}>Lagre navn</button>
+            <button className="cancel-btn" onClick={() => { setEditingName(null); setNewFullName(""); }}>Avbryt</button>
+          </div>
+        </div>
+      )}
+
       <div className="admin-user-list">
         {loading ? <p className="lb-empty">Laster brukere…</p> : users.map(u => (
           <div key={u.username} className="admin-user-row">
-            <span className="admin-username">{u.username}</span>
-            <div style={{display:"flex", gap:6}}>
-              <button className="edit-btn" onClick={() => { setResetTarget(u.username); setNewPassword(""); setMsg({text:"",type:""}); }}>🔑 Reset passord</button>
+            <div>
+              <span className="admin-username">{u.username}</span>
+              {u.full_name && <span style={{fontSize:"0.78rem", color:"var(--muted)", marginLeft:8}}>{u.full_name}</span>}
+            </div>
+            <div style={{display:"flex", gap:6, flexWrap:"wrap"}}>
+              <button className="edit-btn" onClick={() => { setEditingName(u.username); setNewFullName(u.full_name || ""); setMsg({text:"",type:""}); }}>✏️ Navn</button>
+              <button className="edit-btn" onClick={() => { setResetTarget(u.username); setNewPassword(""); setMsg({text:"",type:""}); }}>🔑 Passord</button>
               <button className="leave-btn" style={{marginTop:0, padding:"7px 12px", fontSize:"0.78rem"}} onClick={() => deleteUser(u.username)}>🗑 Slett</button>
             </div>
           </div>
@@ -814,6 +839,7 @@ export default function App() {
   const [matchesError, setMatchesError] = useState(null);
   const [allPicks, setAllPicks] = useState({});
   const [allWinnerPicks, setAllWinnerPicks] = useState({});
+  const [allFullNames, setAllFullNames] = useState({});
   const [tab, setTab] = useState("kamper");
   const [filter, setFilter] = useState("alle");
   const [darkMode, setDarkMode] = useState(true);
@@ -852,21 +878,23 @@ export default function App() {
   }, [username]);
 
   async function loadAllData() {
-    const [picksRes, winnerRes] = await Promise.all([
+    const [picksRes, winnerRes, profilesRes] = await Promise.all([
       sb.from("picks").select("*"),
       sb.from("winner_picks").select("*"),
+      sb.from("profiles").select("username, full_name"),
     ]);
-    // Build allPicks: { username: { matchId: pick } }
     const picks = {};
     (picksRes.data || []).forEach(p => {
       if (!picks[p.username]) picks[p.username] = {};
       picks[p.username][p.match_id] = p;
     });
     setAllPicks(picks);
-    // Build allWinnerPicks: { username: team }
     const winners = {};
     (winnerRes.data || []).forEach(w => { winners[w.username] = w.team; });
     setAllWinnerPicks(winners);
+    const fullNames = {};
+    (profilesRes.data || []).forEach(p => { if (p.full_name) fullNames[p.username] = p.full_name; });
+    setAllFullNames(fullNames);
   }
 
   async function login() {
@@ -996,7 +1024,7 @@ export default function App() {
       )}
 
       {tab === "vinner" && <WinnerPick currentUser={username} matches={matches} allWinnerPicks={allWinnerPicks} onSaved={loadAllData} />}
-      {tab === "ledertavle" && <Leaderboard allPicks={allPicks} matches={matches} allWinnerPicks={allWinnerPicks} />}
+      {tab === "ledertavle" && <Leaderboard allPicks={allPicks} matches={matches} allWinnerPicks={allWinnerPicks} allFullNames={allFullNames} />}
       {tab === "ligaer" && <LeaguePanel currentUser={username} allPicks={allPicks} matches={matches} allWinnerPicks={allWinnerPicks} />}
       {tab === "chat" && <Chat currentUser={username} />}
       {tab === "admin" && username.toLowerCase() === "herbertdinho" && <AdminPanel />}
