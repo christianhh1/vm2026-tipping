@@ -723,7 +723,7 @@ function Chat({ currentUser }) {
 }
 
 // ─── ADMIN PANEL ──────────────────────────────────────────────────────────────
-function AdminPanel() {
+function AdminPanel({ onDataChanged }) {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [resetTarget, setResetTarget] = useState(null);
@@ -763,6 +763,7 @@ function AdminPanel() {
     await loadUsers();
     setEditingName(null); setNewFullName("");
     setMsg({ text: `✅ Navn oppdatert for ${editingName}`, type: "success" });
+    onDataChanged?.();
   }
 
   async function deleteUser(username) {
@@ -1028,7 +1029,7 @@ export default function App() {
       {tab === "ledertavle" && <Leaderboard allPicks={allPicks} matches={matches} allWinnerPicks={allWinnerPicks} allFullNames={allFullNames} />}
       {tab === "ligaer" && <LeaguePanel currentUser={username} allPicks={allPicks} matches={matches} allWinnerPicks={allWinnerPicks} allFullNames={allFullNames} />}
       {tab === "chat" && <Chat currentUser={username} />}
-      {tab === "admin" && username.toLowerCase() === "herbertdinho" && <AdminPanel />}
+      {tab === "admin" && username.toLowerCase() === "herbertdinho" && <AdminPanel onDataChanged={loadAllData} />}
 
       {tab === "regler" && (
         <div className="rules-panel">
