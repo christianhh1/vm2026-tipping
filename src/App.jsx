@@ -849,6 +849,8 @@ export default function App() {
   const [allFullNames, setAllFullNames] = useState({});
   const [tab, setTab] = useState("kamper");
   const [filter, setFilter] = useState("alle");
+  const [search, setSearch] = useState("");
+  const [darkMode, setDarkMode] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
   const lastSeenRef = useRef(localStorage.getItem("chat_last_seen_" + username) || new Date(0).toISOString());
   const [authUsername, setAuthUsername] = useState("");
