@@ -427,7 +427,7 @@ function WinnerPick({ currentUser, matches, allWinnerPicks, onSaved }) {
 }
 
 // ─── LEAGUE PANEL ─────────────────────────────────────────────────────────────
-function LeaguePanel({ currentUser, allPicks, matches, allWinnerPicks }) {
+function LeaguePanel({ currentUser, allPicks, matches, allWinnerPicks, allFullNames }) {
   const [leagues, setLeagues] = useState([]);
   const [view, setView] = useState("mine");
   const [newLeagueName, setNewLeagueName] = useState("");
@@ -524,12 +524,13 @@ function LeaguePanel({ currentUser, allPicks, matches, allWinnerPicks }) {
           <div className="league-meta">{members.length} deltakere · Opprettet av {league.owner}</div>
         </div>
         <table className="lb-table" style={{marginTop:16}}>
-          <thead><tr><th>#</th><th>Spiller</th><th>Poeng</th><th>Eksakt</th><th>Riktig</th></tr></thead>
+          <thead><tr><th>#</th><th>Spiller</th><th>Ekte navn</th><th>Poeng</th><th>Eksakt</th><th>Riktig</th></tr></thead>
           <tbody>
             {scores.map((s, i) => (
               <tr key={s.user} className={i === 0 ? "lb-first" : ""}>
                 <td>{i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : i + 1}</td>
                 <td>{s.user}{s.user === currentUser && <span className="you-badge">deg</span>}</td>
+                <td style={{fontSize:"0.82rem", color:"var(--muted)"}}>{allFullNames?.[s.user] || "–"}</td>
                 <td><strong>{s.pts}</strong></td>
                 <td>{s.exact}</td>
                 <td>{s.correct}</td>
@@ -1025,7 +1026,7 @@ export default function App() {
 
       {tab === "vinner" && <WinnerPick currentUser={username} matches={matches} allWinnerPicks={allWinnerPicks} onSaved={loadAllData} />}
       {tab === "ledertavle" && <Leaderboard allPicks={allPicks} matches={matches} allWinnerPicks={allWinnerPicks} allFullNames={allFullNames} />}
-      {tab === "ligaer" && <LeaguePanel currentUser={username} allPicks={allPicks} matches={matches} allWinnerPicks={allWinnerPicks} />}
+      {tab === "ligaer" && <LeaguePanel currentUser={username} allPicks={allPicks} matches={matches} allWinnerPicks={allWinnerPicks} allFullNames={allFullNames} />}
       {tab === "chat" && <Chat currentUser={username} />}
       {tab === "admin" && username.toLowerCase() === "herbertdinho" && <AdminPanel />}
 
