@@ -897,7 +897,12 @@ export default function App() {
       })
       .subscribe();
     return () => sb.removeChannel(channel);
-  }, [username, tab]);.then(m => { setMatches(m); setMatchesLoading(false); }).catch(e => { setMatchesError(e.message); setMatchesLoading(false); });
+  }, [username, tab]);
+
+  useEffect(() => {
+    if (!username) return;
+    loadAllData();
+    fetchMatches().then(m => { setMatches(m); setMatchesLoading(false); }).catch(e => { setMatchesError(e.message); setMatchesLoading(false); });
   }, [username]);
 
   async function loadAllData() {
