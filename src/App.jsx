@@ -844,7 +844,8 @@ export default function App() {
   const [allFullNames, setAllFullNames] = useState({});
   const [tab, setTab] = useState("kamper");
   const [filter, setFilter] = useState("alle");
-  const [darkMode, setDarkMode] = useState(true);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const lastSeenRef = useRef(localStorage.getItem("chat_last_seen_" + username) || new Date(0).toISOString());
   const [authUsername, setAuthUsername] = useState("");
   const [authPassword, setAuthPassword] = useState("");
   const [authError, setAuthError] = useState("");
@@ -875,8 +876,23 @@ export default function App() {
 
   useEffect(() => {
     if (!username) return;
-    loadAllData();
-    fetchMatches().then(m => { setMatches(m); setMatchesLoading(false); }).catch(e => { setMatchesError(e.message); setMatchesLoading(false); });
+    // Count messages newer than last seen
+    async function checkUnread() {
+      const lastSeen = localStorage.getItem("chat_last_seen_" + username) || new Date(0).toISOString();
+      const { count } = await sb.from("messages")
+        .select("*", { count: "exact", head: true })
+        .gt("created_at", lastSeen)
+        .neq("username", username);
+      setUnreadCount(count || 0);
+    }
+    checkUnread();
+    const channel = sb.channel("chat-unread")
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, () => {
+        if (tab !== "chat") checkUnread();
+      })
+      .subscribe();
+    return () => sb.removeChannel(channel);
+  }, [username, tab]);.then(m => { setMatches(m); setMatchesLoading(false); }).catch(e => { setMatchesError(e.message); setMatchesLoading(false); });
   }, [username]);
 
   async function loadAllData() {
@@ -995,7 +1011,15 @@ export default function App() {
         <button className={tab === "ledertavle" ? "active" : ""} onClick={() => setTab("ledertavle")}>Ledertavle</button>
         <button className={tab === "ligaer" ? "active" : ""} onClick={() => setTab("ligaer")}>🏆 Ligaer</button>
         <button className={tab === "regler" ? "active" : ""} onClick={() => setTab("regler")}>📋 Regler</button>
-        <button className={tab === "chat" ? "active" : ""} onClick={() => setTab("chat")}>💬 Chat</button>
+        <button className={tab === "chat" ? "active" : ""} onClick={() => {
+          setTab("chat");
+          const now = new Date().toISOString();
+          localStorage.setItem("chat_last_seen_" + username, now);
+          lastSeenRef.current = now;
+          setUnreadCount(0);
+        }}>
+          💬 Chat{unreadCount > 0 && <span className="unread-badge">{unreadCount}</span>}
+        </button>
         {username.toLowerCase() === "herbertdinho" && <button className={tab === "admin" ? "active" : ""} onClick={() => setTab("admin")}>⚙️ Admin</button>}
       </nav>
 
@@ -1280,6 +1304,7 @@ const CSS = `
   .you-badge { background: rgba(0,200,83,0.15); color: var(--green); font-size: 0.65rem; font-weight: 700; padding: 2px 6px; border-radius: 4px; margin-left: 6px; vertical-align: middle; }
   .leave-btn { margin-top: 20px; background: transparent; border: 1px solid rgba(255,61,61,0.3); color: var(--red); padding: 9px 18px; border-radius: 8px; cursor: pointer; font-family: inherit; font-size: 0.85rem; transition: all .2s; }
   .leave-btn:hover { background: rgba(255,61,61,0.1); }
+  .unread-badge { background: var(--red); color: #fff; font-size: 0.65rem; font-weight: 700; padding: 2px 5px; border-radius: 10px; margin-left: 5px; vertical-align: middle; min-width: 16px; display: inline-block; text-align: center; line-height: 1.4; }
   .chat-panel { padding: 20px 0; max-width: 680px; display: flex; flex-direction: column; gap: 16px; }
   .chat-messages { background: rgba(255,255,255,0.04); border: 1px solid var(--card-border); border-radius: 16px; padding: 16px; min-height: 300px; max-height: 500px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
   .chat-msg { display: flex; align-items: flex-end; gap: 6px; }
