@@ -953,8 +953,6 @@ export default function App() {
     setUsername(""); setAllPicks({}); setAllWinnerPicks({});
   }
 
-  const [search, setSearch] = useState("");
-
   const filteredMatches = matches.filter(m => {
     if (filter === "next24") {
       const kickoff = new Date(m.kickoff);
