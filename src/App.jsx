@@ -495,6 +495,7 @@ function LeaguePanel({ currentUser, allPicks, matches, allWinnerPicks, allFullNa
     const league = leagues.find(l => l.code === activeLeague);
     if (!league) return null;
     const members = league.members || [];
+    const isOwner = league.owner === currentUser;
     const scores = members.map(user => {
       let pts = 0, exact = 0, correct = 0;
       matches.forEach(m => {
@@ -522,9 +523,26 @@ function LeaguePanel({ currentUser, allPicks, matches, allWinnerPicks, allFullNa
             <button className="copy-btn" onClick={() => copyCode(league.code)}>{copied ? "✓ Kopiert!" : "Kopier"}</button>
           </div>
           <div className="league-meta">{members.length} deltakere · Opprettet av {league.owner}</div>
+          {isOwner && (
+            <div className="prize-edit-row">
+              <span className="prize-label">🏅 Premie:</span>
+              <input
+                className="prize-input"
+                placeholder="Skriv inn premie…"
+                defaultValue={league.prize || ""}
+                onBlur={async e => {
+                  await sb.from("leagues").update({ prize: e.target.value.trim() || null }).eq("code", activeLeague);
+                  await loadLeagues();
+                }}
+              />
+            </div>
+          )}
+          {!isOwner && league.prize && (
+            <div className="prize-display">🏅 Premie: <strong>{league.prize}</strong></div>
+          )}
         </div>
         <table className="lb-table" style={{marginTop:16}}>
-          <thead><tr><th>#</th><th>Spiller</th><th>Ekte navn</th><th>Poeng</th><th>Eksakt</th><th>Riktig</th></tr></thead>
+          <thead><tr><th>#</th><th>Spiller</th><th>Ekte navn</th><th>Poeng</th><th>Eksakt</th><th>Riktig</th><th>Premie</th></tr></thead>
           <tbody>
             {scores.map((s, i) => (
               <tr key={s.user} className={i === 0 ? "lb-first" : ""}>
@@ -534,6 +552,7 @@ function LeaguePanel({ currentUser, allPicks, matches, allWinnerPicks, allFullNa
                 <td><strong>{s.pts}</strong></td>
                 <td>{s.exact}</td>
                 <td>{s.correct}</td>
+                <td style={{fontSize:"0.82rem"}}>{i === 0 && league.prize ? <span className="pts pts-3">🏅 {league.prize}</span> : "–"}</td>
               </tr>
             ))}
           </tbody>
@@ -1313,6 +1332,11 @@ const CSS = `
   .back-btn:hover { border-color: var(--green); color: var(--green); }
   .you-badge { background: rgba(0,200,83,0.15); color: var(--green); font-size: 0.65rem; font-weight: 700; padding: 2px 6px; border-radius: 4px; margin-left: 6px; vertical-align: middle; }
   .leave-btn { margin-top: 20px; background: transparent; border: 1px solid rgba(255,61,61,0.3); color: var(--red); padding: 9px 18px; border-radius: 8px; cursor: pointer; font-family: inherit; font-size: 0.85rem; transition: all .2s; }
+  .prize-edit-row { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+  .prize-label { font-size: 0.85rem; color: var(--muted); white-space: nowrap; }
+  .prize-input { flex: 1; max-width: 280px; padding: 8px 12px; background: rgba(255,255,255,0.07); border: 1px solid var(--card-border); border-radius: 8px; color: var(--text); font-family: inherit; font-size: 0.88rem; outline: none; transition: border .2s; }
+  .prize-input:focus { border-color: var(--gold); }
+  .prize-display { margin-top: 8px; font-size: 0.85rem; color: var(--muted); }
   .leave-btn:hover { background: rgba(255,61,61,0.1); }
   .unread-badge { background: var(--red); color: #fff; font-size: 0.65rem; font-weight: 700; padding: 2px 5px; border-radius: 10px; margin-left: 5px; vertical-align: middle; min-width: 16px; display: inline-block; text-align: center; line-height: 1.4; }
   .chat-panel { padding: 20px 0; max-width: 680px; display: flex; flex-direction: column; gap: 16px; }
