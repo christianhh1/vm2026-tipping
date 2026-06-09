@@ -540,13 +540,25 @@ function LeaguePanel({ currentUser, allPicks, matches, allWinnerPicks, allFullNa
                 <input className="prize-input" placeholder="Premie for 3. plass…" defaultValue={league.prize3 || ""}
                   onBlur={async e => { await sb.from("leagues").update({ prize3: e.target.value.trim() || null }).eq("code", activeLeague); await loadLeagues(); }} />
               </div>
+              <div className="prize-edit-row">
+                <span className="prize-label">4. plass:</span>
+                <input className="prize-input" placeholder="Premie for 4. plass…" defaultValue={league.prize4 || ""}
+                  onBlur={async e => { await sb.from("leagues").update({ prize4: e.target.value.trim() || null }).eq("code", activeLeague); await loadLeagues(); }} />
+              </div>
+              <div className="prize-edit-row">
+                <span className="prize-label">5. plass:</span>
+                <input className="prize-input" placeholder="Premie for 5. plass…" defaultValue={league.prize5 || ""}
+                  onBlur={async e => { await sb.from("leagues").update({ prize5: e.target.value.trim() || null }).eq("code", activeLeague); await loadLeagues(); }} />
+              </div>
             </div>
           )}
-          {!isOwner && (league.prize1 || league.prize2 || league.prize3) && (
+          {!isOwner && (league.prize1 || league.prize2 || league.prize3 || league.prize4 || league.prize5) && (
             <div className="prize-display-section">
               {league.prize1 && <div className="prize-display">🥇 1. plass: <strong>{league.prize1}</strong></div>}
               {league.prize2 && <div className="prize-display">🥈 2. plass: <strong>{league.prize2}</strong></div>}
               {league.prize3 && <div className="prize-display">🥉 3. plass: <strong>{league.prize3}</strong></div>}
+              {league.prize4 && <div className="prize-display">4. plass: <strong>{league.prize4}</strong></div>}
+              {league.prize5 && <div className="prize-display">5. plass: <strong>{league.prize5}</strong></div>}
             </div>
           )}
         </div>
@@ -565,6 +577,8 @@ function LeaguePanel({ currentUser, allPicks, matches, allWinnerPicks, allFullNa
                   {i === 0 && league.prize1 ? <span className="pts pts-3">🥇 {league.prize1}</span>
                   : i === 1 && league.prize2 ? <span className="pts pts-1">🥈 {league.prize2}</span>
                   : i === 2 && league.prize3 ? <span style={{color:"#cd7f32", fontWeight:700}}>🥉 {league.prize3}</span>
+                  : i === 3 && league.prize4 ? <span style={{color:"var(--muted)", fontWeight:600}}>4. {league.prize4}</span>
+                  : i === 4 && league.prize5 ? <span style={{color:"var(--muted)", fontWeight:600}}>5. {league.prize5}</span>
                   : "–"}
                 </td>
               </tr>
