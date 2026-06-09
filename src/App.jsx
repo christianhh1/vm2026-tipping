@@ -513,6 +513,11 @@ function LeaguePanel({ currentUser, allPicks, matches, allWinnerPicks, allFullNa
       return { user, pts, exact, correct };
     }).sort((a, b) => b.pts - a.pts || b.exact - a.exact);
 
+        const firstKickoff = matches.length > 0 ? matches.reduce((a, b) => new Date(a.kickoff) < new Date(b.kickoff) ? a : b).kickoff : null;
+        const vmTippVisible = firstKickoff ? hasStarted(firstKickoff) : false;
+        const finalMatch = matches.find(m => m.round === "final" && m.status === "FINISHED");
+        const vmWinner = finalMatch ? (finalMatch.homeScore > finalMatch.awayScore ? finalMatch.home : finalMatch.homeScore < finalMatch.awayScore ? finalMatch.away : null) : null;
+
     return (
       <div className="league-panel">
         <button className="back-btn" onClick={() => setActiveLeague(null)}>← Tilbake til ligaer</button>
@@ -562,29 +567,38 @@ function LeaguePanel({ currentUser, allPicks, matches, allWinnerPicks, allFullNa
             </div>
           )}
         </div>
-        <table className="lb-table" style={{marginTop:16}}>
-          <thead><tr><th>#</th><th>Spiller</th><th>Ekte navn</th><th>Poeng</th><th>Eksakt</th><th>Riktig</th><th>Premie</th></tr></thead>
-          <tbody>
-            {scores.map((s, i) => (
-              <tr key={s.user} className={i === 0 ? "lb-first" : ""}>
-                <td>{i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : i + 1}</td>
-                <td>{s.user}{s.user === currentUser && <span className="you-badge">deg</span>}</td>
-                <td style={{fontSize:"0.82rem", color:"var(--muted)"}}>{allFullNames?.[s.user] || "–"}</td>
-                <td><strong>{s.pts}</strong></td>
-                <td>{s.exact}</td>
-                <td>{s.correct}</td>
-                <td style={{fontSize:"0.82rem"}}>
-                  {i === 0 && league.prize1 ? <span className="pts pts-3">🥇 {league.prize1}</span>
-                  : i === 1 && league.prize2 ? <span className="pts pts-1">🥈 {league.prize2}</span>
-                  : i === 2 && league.prize3 ? <span style={{color:"#cd7f32", fontWeight:700}}>🥉 {league.prize3}</span>
-                  : i === 3 && league.prize4 ? <span style={{color:"var(--muted)", fontWeight:600}}>4. {league.prize4}</span>
-                  : i === 4 && league.prize5 ? <span style={{color:"var(--muted)", fontWeight:600}}>5. {league.prize5}</span>
-                  : "–"}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        {(() => {
+          const firstKickoff = matches.length > 0 ? matches.reduce((a, b) => new Date(a.kickoff) < new Date(b.kickoff) ? a : b).kickoff : null;
+          const vmTippVisible = firstKickoff ? hasStarted(firstKickoff) : false;
+          const finalMatch = matches.find(m => m.round === "final" && m.status === "FINISHED");
+          const vmWinner = finalMatch ? (finalMatch.homeScore > finalMatch.awayScore ? finalMatch.home : finalMatch.homeScore < finalMatch.awayScore ? finalMatch.away : null) : null;
+          return (
+            <table className="lb-table" style={{marginTop:16}}>
+              <thead><tr><th>#</th><th>Spiller</th><th>Ekte navn</th><th>Poeng</th><th>Eksakt</th><th>Riktig</th>{vmTippVisible && <th>VM-tipp</th>}<th>Premie</th></tr></thead>
+              <tbody>
+                {scores.map((s, i) => (
+                  <tr key={s.user} className={i === 0 ? "lb-first" : ""}>
+                    <td>{i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : i + 1}</td>
+                    <td>{s.user}{s.user === currentUser && <span className="you-badge">deg</span>}</td>
+                    <td style={{fontSize:"0.82rem", color:"var(--muted)"}}>{allFullNames?.[s.user] || "–"}</td>
+                    <td><strong>{s.pts}</strong></td>
+                    <td>{s.exact}</td>
+                    <td>{s.correct}</td>
+                    {vmTippVisible && <td style={{fontSize:"0.78rem"}}>{allWinnerPicks?.[s.user] ? <span style={{color: vmWinner && allWinnerPicks[s.user] === vmWinner ? "var(--gold)" : "var(--muted)"}}>{allWinnerPicks[s.user]}{vmWinner && allWinnerPicks[s.user] === vmWinner && " 🎯"}</span> : "–"}</td>}
+                    <td style={{fontSize:"0.82rem"}}>
+                      {i === 0 && league.prize1 ? <span className="pts pts-3">🥇 {league.prize1}</span>
+                      : i === 1 && league.prize2 ? <span className="pts pts-1">🥈 {league.prize2}</span>
+                      : i === 2 && league.prize3 ? <span style={{color:"#cd7f32", fontWeight:700}}>🥉 {league.prize3}</span>
+                      : i === 3 && league.prize4 ? <span style={{color:"var(--muted)", fontWeight:600}}>4. {league.prize4}</span>
+                      : i === 4 && league.prize5 ? <span style={{color:"var(--muted)", fontWeight:600}}>5. {league.prize5}</span>
+                      : "–"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          );
+        })()}
         <button className="leave-btn" onClick={() => leaveOrDeleteLeague(activeLeague)}>
           {league.owner === currentUser ? "Slett liga" : "Forlat liga"}
         </button>
