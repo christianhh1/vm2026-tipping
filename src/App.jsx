@@ -692,6 +692,7 @@ function MatchesByRound({ matches, currentUser, allPicks }) {
 
 // ─── CHAT ─────────────────────────────────────────────────────────────────────
 function Chat({ currentUser }) {
+  const isAdmin = currentUser.toLowerCase() === "herbertdinho";
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(true);
@@ -747,7 +748,7 @@ function Chat({ currentUser }) {
               <span className="chat-text">{m.content}</span>
               <span className="chat-time">{formatTime(m.created_at)}</span>
             </div>
-            {m.username === currentUser && (
+            {(m.username === currentUser || isAdmin) && (
               <button className="chat-delete" onClick={() => deleteMessage(m.id)} title="Slett">✕</button>
             )}
           </div>
