@@ -524,21 +524,30 @@ function LeaguePanel({ currentUser, allPicks, matches, allWinnerPicks, allFullNa
           </div>
           <div className="league-meta">{members.length} deltakere · Opprettet av {league.owner}</div>
           {isOwner && (
-            <div className="prize-edit-row">
-              <span className="prize-label">🏅 Premie:</span>
-              <input
-                className="prize-input"
-                placeholder="Skriv inn premie…"
-                defaultValue={league.prize || ""}
-                onBlur={async e => {
-                  await sb.from("leagues").update({ prize: e.target.value.trim() || null }).eq("code", activeLeague);
-                  await loadLeagues();
-                }}
-              />
+            <div className="prize-edit-section">
+              <div className="prize-edit-row">
+                <span className="prize-label">🥇 1. plass:</span>
+                <input className="prize-input" placeholder="Premie for 1. plass…" defaultValue={league.prize1 || ""}
+                  onBlur={async e => { await sb.from("leagues").update({ prize1: e.target.value.trim() || null }).eq("code", activeLeague); await loadLeagues(); }} />
+              </div>
+              <div className="prize-edit-row">
+                <span className="prize-label">🥈 2. plass:</span>
+                <input className="prize-input" placeholder="Premie for 2. plass…" defaultValue={league.prize2 || ""}
+                  onBlur={async e => { await sb.from("leagues").update({ prize2: e.target.value.trim() || null }).eq("code", activeLeague); await loadLeagues(); }} />
+              </div>
+              <div className="prize-edit-row">
+                <span className="prize-label">🥉 3. plass:</span>
+                <input className="prize-input" placeholder="Premie for 3. plass…" defaultValue={league.prize3 || ""}
+                  onBlur={async e => { await sb.from("leagues").update({ prize3: e.target.value.trim() || null }).eq("code", activeLeague); await loadLeagues(); }} />
+              </div>
             </div>
           )}
-          {!isOwner && league.prize && (
-            <div className="prize-display">🏅 Premie: <strong>{league.prize}</strong></div>
+          {!isOwner && (league.prize1 || league.prize2 || league.prize3) && (
+            <div className="prize-display-section">
+              {league.prize1 && <div className="prize-display">🥇 1. plass: <strong>{league.prize1}</strong></div>}
+              {league.prize2 && <div className="prize-display">🥈 2. plass: <strong>{league.prize2}</strong></div>}
+              {league.prize3 && <div className="prize-display">🥉 3. plass: <strong>{league.prize3}</strong></div>}
+            </div>
           )}
         </div>
         <table className="lb-table" style={{marginTop:16}}>
@@ -552,7 +561,12 @@ function LeaguePanel({ currentUser, allPicks, matches, allWinnerPicks, allFullNa
                 <td><strong>{s.pts}</strong></td>
                 <td>{s.exact}</td>
                 <td>{s.correct}</td>
-                <td style={{fontSize:"0.82rem"}}>{i === 0 && league.prize ? <span className="pts pts-3">🏅 {league.prize}</span> : "–"}</td>
+                <td style={{fontSize:"0.82rem"}}>
+                  {i === 0 && league.prize1 ? <span className="pts pts-3">🥇 {league.prize1}</span>
+                  : i === 1 && league.prize2 ? <span className="pts pts-1">🥈 {league.prize2}</span>
+                  : i === 2 && league.prize3 ? <span style={{color:"#cd7f32", fontWeight:700}}>🥉 {league.prize3}</span>
+                  : "–"}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -1332,11 +1346,13 @@ const CSS = `
   .back-btn:hover { border-color: var(--green); color: var(--green); }
   .you-badge { background: rgba(0,200,83,0.15); color: var(--green); font-size: 0.65rem; font-weight: 700; padding: 2px 6px; border-radius: 4px; margin-left: 6px; vertical-align: middle; }
   .leave-btn { margin-top: 20px; background: transparent; border: 1px solid rgba(255,61,61,0.3); color: var(--red); padding: 9px 18px; border-radius: 8px; cursor: pointer; font-family: inherit; font-size: 0.85rem; transition: all .2s; }
-  .prize-edit-row { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
-  .prize-label { font-size: 0.85rem; color: var(--muted); white-space: nowrap; }
+  .prize-edit-section { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+  .prize-display-section { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; }
+  .prize-edit-row { display: flex; align-items: center; gap: 10px; }
+  .prize-label { font-size: 0.85rem; color: var(--muted); white-space: nowrap; min-width: 90px; }
   .prize-input { flex: 1; max-width: 280px; padding: 8px 12px; background: rgba(255,255,255,0.07); border: 1px solid var(--card-border); border-radius: 8px; color: var(--text); font-family: inherit; font-size: 0.88rem; outline: none; transition: border .2s; }
   .prize-input:focus { border-color: var(--gold); }
-  .prize-display { margin-top: 8px; font-size: 0.85rem; color: var(--muted); }
+  .prize-display { font-size: 0.85rem; color: var(--muted); }
   .leave-btn:hover { background: rgba(255,61,61,0.1); }
   .unread-badge { background: var(--red); color: #fff; font-size: 0.65rem; font-weight: 700; padding: 2px 5px; border-radius: 10px; margin-left: 5px; vertical-align: middle; min-width: 16px; display: inline-block; text-align: center; line-height: 1.4; }
   .chat-panel { padding: 20px 0; max-width: 680px; display: flex; flex-direction: column; gap: 16px; }
