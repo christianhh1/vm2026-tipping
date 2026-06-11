@@ -256,7 +256,7 @@ function MatchCard({ match, currentUser, allPicks }) {
           ) : (
             <div className="no-pick">Du tippet ikke denne kampen</div>
           )}
-          {started && match.status === "FINISHED" && (
+          {started && (
             <div className="others-picks">
               <div className="others-label">Alle tips:</div>
               {Object.entries(allPicks).filter(([,p]) => p[match.id]).map(([user, p]) => {
