@@ -17,11 +17,15 @@ const MOCK_MATCHES = [
 ];
 
 async function fetchMatches() {
+  const res = await fetch("/api/matches");
+  if (!res.ok) throw new Error(`API-feil: ${res.status}`);
+  const apiMatches = await res.json();
+
   const { data: manual } = await sb.from("manual_results").select("*");
   const manualMap = {};
   (manual || []).forEach(r => { manualMap[r.match_id] = r; });
 
-  return MOCK_MATCHES.map(m => {
+  return apiMatches.map(m => {
     const override = manualMap[m.id];
     if (override) {
       return {
