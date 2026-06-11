@@ -166,6 +166,8 @@ function MatchCard({ match, currentUser, allPicks }) {
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [showAllPicks, setShowAllPicks] = useState(false);
+
+  const isKnockout = getRoundKey(match) !== "group";
   const pickIsDrawn = home !== "" && away !== "" && parseInt(home) === parseInt(away);
   const needsQualifier = isKnockout && pickIsDrawn;
   const roundKey = getRoundKey(match);
