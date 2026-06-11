@@ -17,10 +17,23 @@ const MOCK_MATCHES = [
 ];
 
 async function fetchMatches() {
-  const res = await fetch("/api/matches");
-  if (!res.ok) throw new Error(`API-feil: ${res.status}`);
-  return await res.json();
- }
+  const { data: manual } = await sb.from("manual_results").select("*");
+  const manualMap = {};
+  (manual || []).forEach(r => { manualMap[r.match_id] = r; });
+
+  return MOCK_MATCHES.map(m => {
+    const override = manualMap[m.id];
+    if (override) {
+      return {
+        ...m,
+        homeScore: override.home_score,
+        awayScore: override.away_score,
+        status: override.status || "FINISHED",
+      };
+    }
+    return m;
+  });
+}
 
 // ─── SCORING ──────────────────────────────────────────────────────────────────
 const ROUND_POINTS = {
@@ -785,7 +798,7 @@ function Chat({ currentUser }) {
 }
 
 // ─── ADMIN PANEL ──────────────────────────────────────────────────────────────
-function AdminPanel({ onDataChanged }) {
+function AdminPanel({ onDataChanged, matches, onMatchesChanged }) {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [resetTarget, setResetTarget] = useState(null);
@@ -794,6 +807,8 @@ function AdminPanel({ onDataChanged }) {
   const [newFullName, setNewFullName] = useState("");
   const [msg, setMsg] = useState({ text: "", type: "" });
   const [working, setWorking] = useState(false);
+  const [resultSearch, setResultSearch] = useState("");
+  const [resultInputs, setResultInputs] = useState({});
 
   useEffect(() => { loadUsers(); }, []);
 
@@ -802,6 +817,28 @@ function AdminPanel({ onDataChanged }) {
     const { data } = await sb.from("profiles").select("username, full_name").order("username");
     setUsers(data || []);
     setLoading(false);
+  }
+
+  async function saveResult(matchId) {
+    const input = resultInputs[matchId];
+    if (!input || input.home === "" || input.away === "") return;
+    await sb.from("manual_results").upsert({
+      match_id: matchId,
+      home_score: parseInt(input.home),
+      away_score: parseInt(input.away),
+      status: "FINISHED",
+    }, { onConflict: "match_id" });
+    setMsg({ text: "✅ Resultat lagret!", type: "success" });
+    onMatchesChanged?.();
+    onDataChanged?.();
+  }
+
+  async function clearResult(matchId) {
+    await sb.from("manual_results").delete().eq("match_id", matchId);
+    setResultInputs(prev => { const c = { ...prev }; delete c[matchId]; return c; });
+    setMsg({ text: "Resultat fjernet.", type: "success" });
+    onMatchesChanged?.();
+    onDataChanged?.();
   }
 
   async function resetPassword() {
@@ -892,6 +929,38 @@ function AdminPanel({ onDataChanged }) {
             </div>
           </div>
         ))}
+      </div>
+
+      <h2 className="lb-title" style={{marginTop:32}}>⚽ Registrer resultater</h2>
+      <input className="search-input" placeholder="🔍 Søk etter lag…" value={resultSearch} onChange={e => setResultSearch(e.target.value)} style={{marginBottom:16}} />
+      <div className="admin-user-list">
+        {(matches || [])
+          .filter(m => resultSearch.trim() === "" || m.home.toLowerCase().includes(resultSearch.toLowerCase()) || m.away.toLowerCase().includes(resultSearch.toLowerCase()))
+          .sort((a,b) => new Date(b.kickoff) - new Date(a.kickoff))
+          .slice(0, 30)
+          .map(m => {
+            const input = resultInputs[m.id] || { home: m.homeScore ?? "", away: m.awayScore ?? "" };
+            return (
+              <div key={m.id} className="admin-user-row">
+                <div style={{display:"flex", alignItems:"center", gap:8, flex:1}}>
+                  <span className="admin-username">{m.home} vs {m.away}</span>
+                  <span style={{fontSize:"0.72rem", color:"var(--muted)"}}>{formatKickoff(m.kickoff)}</span>
+                  {m.status === "FINISHED" && <span className="pts pts-3" style={{fontSize:"0.7rem"}}>FERDIG</span>}
+                </div>
+                <div style={{display:"flex", gap:6, alignItems:"center"}}>
+                  <input type="number" min="0" max="20" className="score-input" style={{width:42, height:36}}
+                    value={input.home}
+                    onChange={e => setResultInputs(prev => ({ ...prev, [m.id]: { ...input, home: e.target.value } }))} />
+                  <span className="dash">–</span>
+                  <input type="number" min="0" max="20" className="score-input" style={{width:42, height:36}}
+                    value={input.away}
+                    onChange={e => setResultInputs(prev => ({ ...prev, [m.id]: { ...input, away: e.target.value } }))} />
+                  <button className="edit-btn" onClick={() => saveResult(m.id)}>💾 Lagre</button>
+                  {m.status === "FINISHED" && <button className="leave-btn" style={{marginTop:0, padding:"7px 12px", fontSize:"0.78rem"}} onClick={() => clearResult(m.id)}>✕</button>}
+                </div>
+              </div>
+            );
+          })}
       </div>
     </div>
   );
@@ -1125,7 +1194,7 @@ export default function App() {
       {tab === "ledertavle" && <Leaderboard allPicks={allPicks} matches={matches} allWinnerPicks={allWinnerPicks} allFullNames={allFullNames} />}
       {tab === "ligaer" && <LeaguePanel currentUser={username} allPicks={allPicks} matches={matches} allWinnerPicks={allWinnerPicks} allFullNames={allFullNames} />}
       {tab === "chat" && <Chat currentUser={username} />}
-      {tab === "admin" && username.toLowerCase() === "herbertdinho" && <AdminPanel onDataChanged={loadAllData} />}
+      {tab === "admin" && username.toLowerCase() === "herbertdinho" && <AdminPanel onDataChanged={loadAllData} matches={matches} onMatchesChanged={() => fetchMatches().then(setMatches)} />}
 
       {tab === "regler" && (
         <div className="rules-panel">
