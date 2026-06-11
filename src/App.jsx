@@ -993,6 +993,10 @@ export default function App() {
   const [filter, setFilter] = useState("alle");
   const [search, setSearch] = useState("");
   const [darkMode, setDarkMode] = useState(true);
+
+  useEffect(() => {
+    document.body.style.background = darkMode ? "#1a3a2a" : "#f0f7f2";
+  }, [darkMode]);
   const [unreadCount, setUnreadCount] = useState(0);
   const lastSeenRef = useRef(localStorage.getItem("chat_last_seen_" + username) || new Date(0).toISOString());
   const [authUsername, setAuthUsername] = useState("");
@@ -1263,7 +1267,7 @@ const CSS = `
     --gold: #ffd600; --red: #ff3d3d; --text: #f0f4f0;
     --muted: #8aab96; --card: rgba(255,255,255,0.05); --card-border: rgba(255,255,255,0.1);
   }
-  body { background: var(--grass); font-family: 'DM Sans', sans-serif; color: var(--text); min-height: 100vh; }
+  html, body { background: var(--grass); font-family: 'DM Sans', sans-serif; color: var(--text); min-height: 100vh; transition: background .3s; overflow-x: hidden; width: 100%; }
 
   .auth-bg { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: radial-gradient(ellipse at 40% 30%, #0d3d1f 0%, #071a0e 100%); }
   .auth-card { background: rgba(255,255,255,0.06); border: 1px solid var(--card-border); backdrop-filter: blur(20px); border-radius: 20px; padding: 40px 36px; width: 360px; display: flex; flex-direction: column; align-items: center; gap: 14px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
@@ -1282,7 +1286,7 @@ const CSS = `
   .auth-btn:hover:not(:disabled) { background: var(--green-dark); color: #fff; }
   .auth-btn:disabled { opacity: 0.6; cursor: default; }
 
-  .app { max-width: 1400px; margin: 0 auto; padding: 0 24px 40px; }
+  .app { max-width: 1400px; margin: 0 auto; padding: 0 24px 40px; min-height: 100vh; width: 100%; background: var(--grass); }
   .header { display: flex; align-items: center; justify-content: space-between; padding: 20px 0 12px; border-bottom: 1px solid var(--card-border); }
   .header-left { display: flex; align-items: center; gap: 12px; }
   .header-logo { font-size: 32px; }
