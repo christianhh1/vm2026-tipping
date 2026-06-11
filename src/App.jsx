@@ -165,8 +165,7 @@ function MatchCard({ match, currentUser, allPicks }) {
   const [saved, setSaved] = useState(!!myPick);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
-
-  const isKnockout = getRoundKey(match) !== "group";
+  const [showAllPicks, setShowAllPicks] = useState(false);
   const pickIsDrawn = home !== "" && away !== "" && parseInt(home) === parseInt(away);
   const needsQualifier = isKnockout && pickIsDrawn;
   const roundKey = getRoundKey(match);
@@ -275,18 +274,24 @@ function MatchCard({ match, currentUser, allPicks }) {
           )}
           {started && (
             <div className="others-picks">
-              <div className="others-label">Alle tips:</div>
-              {Object.entries(allPicks).filter(([,p]) => p[match.id]).map(([user, p]) => {
-                const pick = p[match.id];
-                const ppts = calcPoints(pick, match);
-                return (
-                  <div key={user} className="other-pick-row">
-                    <span className="other-user">{user}</span>
-                    <span className="other-score">{pick.home_score}–{pick.away_score}{pick.qualifier ? ` ➜ ${pick.qualifier}` : ""}</span>
-                    <span className={`pts-sm pts-${ppts > 0 ? (ppts === maxPts ? "3" : "1") : "0"}`}>{ppts}p</span>
-                  </div>
-                );
-              })}
+              <button className="others-toggle" onClick={() => setShowAllPicks(!showAllPicks)}>
+                {showAllPicks ? "▲ Skjul alle tips" : "▼ Vis alle tips"}
+              </button>
+              {showAllPicks && (
+                <div className="others-list">
+                  {Object.entries(allPicks).filter(([,p]) => p[match.id]).map(([user, p]) => {
+                    const pick = p[match.id];
+                    const ppts = calcPoints(pick, match);
+                    return (
+                      <div key={user} className="other-pick-row">
+                        <span className="other-user">{user}</span>
+                        <span className="other-score">{pick.home_score}–{pick.away_score}{pick.qualifier ? ` ➜ ${pick.qualifier}` : ""}</span>
+                        <span className={`pts-sm pts-${ppts > 0 ? (ppts === maxPts ? "3" : "1") : "0"}`}>{ppts}p</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -1377,6 +1382,9 @@ const CSS = `
   .pts-3 { color: var(--gold); } .pts-1 { color: var(--green); } .pts-0 { color: var(--red); }
   .no-pick { font-size: 0.8rem; color: var(--muted); text-align: center; }
   .others-picks { border-top: 1px solid var(--card-border); padding-top: 8px; }
+  .others-toggle { width: 100%; background: rgba(255,255,255,0.04); border: 1px solid var(--card-border); border-radius: 8px; padding: 7px; color: var(--muted); cursor: pointer; font-family: inherit; font-size: 0.78rem; transition: all .2s; }
+  .others-toggle:hover { border-color: var(--green); color: var(--green); }
+  .others-list { margin-top: 8px; display: flex; flex-direction: column; gap: 4px; }
   .others-label { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
   .other-pick-row { display: flex; justify-content: space-between; align-items: center; padding: 3px 0; font-size: 0.82rem; }
   .other-user { flex: 1; } .other-score { font-family: 'Bebas Neue', cursive; font-size: 1rem; letter-spacing: 2px; }
