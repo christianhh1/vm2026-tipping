@@ -335,6 +335,7 @@ function Leaderboard({ allPicks, matches, memberFilter, allWinnerPicks, allFullN
     <div className="leaderboard">
       <h2 className="lb-title">🏆 Ledertavle</h2>
       {scores.length === 0 ? <p className="lb-empty">Ingen resultater ennå</p> : (
+        <div className="table-scroll">
         <table className="lb-table">
           <thead><tr><th>#</th><th>Spiller</th><th>Ekte navn</th><th>Poeng</th><th>Eksakt</th><th>Riktig</th>{vmTippVisible && <th>VM-tipp</th>}</tr></thead>
           <tbody>
@@ -351,6 +352,7 @@ function Leaderboard({ allPicks, matches, memberFilter, allWinnerPicks, allFullN
             ))}
           </tbody>
         </table>
+        </div>
       )}
     </div>
   );
@@ -597,6 +599,7 @@ function LeaguePanel({ currentUser, allPicks, matches, allWinnerPicks, allFullNa
           const finalMatch = matches.find(m => m.round === "final" && m.status === "FINISHED");
           const vmWinner = finalMatch ? (finalMatch.homeScore > finalMatch.awayScore ? finalMatch.home : finalMatch.homeScore < finalMatch.awayScore ? finalMatch.away : null) : null;
           return (
+            <div className="table-scroll">
             <table className="lb-table" style={{marginTop:16}}>
               <thead><tr><th>#</th><th>Spiller</th><th>Ekte navn</th><th>Poeng</th><th>Eksakt</th><th>Riktig</th>{vmTippVisible && <th>VM-tipp</th>}<th>Premie</th></tr></thead>
               <tbody>
@@ -621,6 +624,7 @@ function LeaguePanel({ currentUser, allPicks, matches, allWinnerPicks, allFullNa
                 ))}
               </tbody>
             </table>
+            </div>
           );
         })()}
         <button className="leave-btn" onClick={() => leaveOrDeleteLeague(activeLeague)}>
@@ -1267,7 +1271,7 @@ const CSS = `
     --gold: #ffd600; --red: #ff3d3d; --text: #f0f4f0;
     --muted: #8aab96; --card: rgba(255,255,255,0.05); --card-border: rgba(255,255,255,0.1);
   }
-  html, body { background: var(--grass); font-family: 'DM Sans', sans-serif; color: var(--text); min-height: 100vh; transition: background .3s; overflow-x: hidden; width: 100%; }
+  html, body { background: var(--grass); font-family: 'DM Sans', sans-serif; color: var(--text); min-height: 100vh; transition: background .3s; width: 100%; }
 
   .auth-bg { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: radial-gradient(ellipse at 40% 30%, #0d3d1f 0%, #071a0e 100%); }
   .auth-card { background: rgba(255,255,255,0.06); border: 1px solid var(--card-border); backdrop-filter: blur(20px); border-radius: 20px; padding: 40px 36px; width: 360px; display: flex; flex-direction: column; align-items: center; gap: 14px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
@@ -1407,6 +1411,8 @@ const CSS = `
   .lb-title { font-family: 'Bebas Neue', cursive; font-size: 2rem; letter-spacing: 3px; margin-bottom: 16px; color: var(--gold); }
   .lb-empty { color: var(--muted); }
   .lb-table { width: 100%; border-collapse: collapse; }
+  .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .table-scroll .lb-table { min-width: 600px; }
   .lb-table th { text-align: left; font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; padding: 8px 12px; border-bottom: 1px solid var(--card-border); }
   .lb-table td { padding: 12px 12px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.92rem; }
   .lb-first td { color: var(--gold); background: rgba(255,214,0,0.05); }
