@@ -81,7 +81,9 @@ function calcPoints(pick, match) {
   }
   const pickWinner = ph > pa ? "home" : ph < pa ? "away" : "draw";
   const matchWinner = mh > ma ? "home" : mh < ma ? "away" : "draw";
-  if (pickWinner === matchWinner && pickWinner !== "draw") return base;
+  // Riktig utfall (vinner eller uavgjort) = base poeng
+  // Uavgjort i knockout uten riktig stilling = 0 (allerede håndtert over)
+  if (pickWinner === matchWinner) return base;
   return 0;
 }
 
