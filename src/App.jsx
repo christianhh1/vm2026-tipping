@@ -4,7 +4,13 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 // ─── SUPABASE ─────────────────────────────────────────────────────────────────
 const SUPABASE_URL = "https://bbhjaijltanclqwrbwhi.supabase.co";
 const SUPABASE_KEY = "sb_publishable_MQ6-ownm4rac2Bi0wswAAQ_Y3DBS0kD";
-const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY, {
+  global: {
+    fetch: (url, options = {}) => {
+      return fetch(url, { ...options, cache: "no-store" });
+    },
+  },
+});
 
 // ─── MOCK MATCHES ─────────────────────────────────────────────────────────────
 const MOCK_MATCHES = [
