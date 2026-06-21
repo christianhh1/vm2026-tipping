@@ -1067,9 +1067,9 @@ export default function App() {
 
   async function loadAllData() {
     const [picksRes, winnerRes, profilesRes] = await Promise.all([
-      sb.from("picks").select("*"),
-      sb.from("winner_picks").select("*"),
-      sb.from("profiles").select("username, full_name"),
+      sb.from("picks").select("*").range(0, 9999),
+      sb.from("winner_picks").select("*").range(0, 9999),
+      sb.from("profiles").select("username, full_name").range(0, 9999),
     ]);
     const picks = {};
     (picksRes.data || []).forEach(p => {
