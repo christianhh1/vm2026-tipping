@@ -39,6 +39,7 @@ async function fetchMatches() {
         homeScore: override.home_score,
         awayScore: override.away_score,
         status: override.status || "FINISHED",
+        qualifier: override.qualifier || null,
       };
     }
     return m;
@@ -226,6 +227,7 @@ function MatchCard({ match, currentUser, allPicks }) {
         <div className="actual-result">
           <span className="result-label">Resultat</span>
           <span className="result-score">{match.homeScore} – {match.awayScore}</span>
+          {match.qualifier && <div className="qualifier-badge" style={{marginTop:4}}>➜ {match.qualifier} gikk videre</div>}
         </div>
       )}
       {!started ? (
@@ -850,6 +852,7 @@ function AdminPanel({ onDataChanged, matches, onMatchesChanged }) {
       home_score: parseInt(input.home),
       away_score: parseInt(input.away),
       status: "FINISHED",
+      qualifier: input.qualifier || null,
     }, { onConflict: "match_id" });
     setMsg({ text: "✅ Resultat lagret!", type: "success" });
     onMatchesChanged?.();
@@ -962,15 +965,18 @@ function AdminPanel({ onDataChanged, matches, onMatchesChanged }) {
           .sort((a,b) => new Date(b.kickoff) - new Date(a.kickoff))
           .slice(0, 30)
           .map(m => {
-            const input = resultInputs[m.id] || { home: m.homeScore ?? "", away: m.awayScore ?? "" };
+            const input = resultInputs[m.id] || { home: m.homeScore ?? "", away: m.awayScore ?? "", qualifier: m.qualifier || "" };
+            const isKnockoutMatch = getRoundKey(m) !== "group";
+            const isTied = input.home !== "" && input.away !== "" && parseInt(input.home) === parseInt(input.away);
+            const needsQualifier = isKnockoutMatch && isTied;
             return (
-              <div key={m.id} className="admin-user-row">
+              <div key={m.id} className="admin-user-row" style={{flexWrap:"wrap"}}>
                 <div style={{display:"flex", alignItems:"center", gap:8, flex:1}}>
                   <span className="admin-username">{m.home} vs {m.away}</span>
                   <span style={{fontSize:"0.72rem", color:"var(--muted)"}}>{formatKickoff(m.kickoff)}</span>
                   {m.status === "FINISHED" && <span className="pts pts-3" style={{fontSize:"0.7rem"}}>FERDIG</span>}
                 </div>
-                <div style={{display:"flex", gap:6, alignItems:"center"}}>
+                <div style={{display:"flex", gap:6, alignItems:"center", flexWrap:"wrap"}}>
                   <input type="number" min="0" max="20" className="score-input" style={{width:42, height:36}}
                     value={input.home}
                     onChange={e => setResultInputs(prev => ({ ...prev, [m.id]: { ...input, home: e.target.value } }))} />
@@ -978,6 +984,15 @@ function AdminPanel({ onDataChanged, matches, onMatchesChanged }) {
                   <input type="number" min="0" max="20" className="score-input" style={{width:42, height:36}}
                     value={input.away}
                     onChange={e => setResultInputs(prev => ({ ...prev, [m.id]: { ...input, away: e.target.value } }))} />
+                  {needsQualifier && (
+                    <select className="auth-input" style={{width:"auto", padding:"7px 10px", fontSize:"0.8rem"}}
+                      value={input.qualifier || ""}
+                      onChange={e => setResultInputs(prev => ({ ...prev, [m.id]: { ...input, qualifier: e.target.value } }))}>
+                      <option value="">Hvem gikk videre?</option>
+                      <option value={m.home}>{m.home}</option>
+                      <option value={m.away}>{m.away}</option>
+                    </select>
+                  )}
                   <button className="edit-btn" onClick={() => saveResult(m.id)}>💾 Lagre</button>
                   {m.status === "FINISHED" && <button className="leave-btn" style={{marginTop:0, padding:"7px 12px", fontSize:"0.78rem"}} onClick={() => clearResult(m.id)}>✕</button>}
                 </div>
