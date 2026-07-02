@@ -27,7 +27,7 @@ async function fetchMatches() {
   if (!res.ok) throw new Error(`API-feil: ${res.status}`);
   const apiMatches = await res.json();
 
-  const { data: manual } = await sb.from("manual_results").select("*");
+  const { data: manual } = await sb.from("manual_results").select("match_id,home_score,away_score,status,qualifier");
   const manualMap = {};
   (manual || []).forEach(r => { manualMap[r.match_id] = r; });
 
