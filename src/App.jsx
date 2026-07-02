@@ -97,6 +97,14 @@ function calcPoints(pick, match) {
     }
     return base;
   }
+
+  // I knockout: hvis kampen gikk til straffer (match.qualifier er satt),
+  // gi basepoeng til de som tippet riktig lag videre (selv om de tippet feil stilling)
+  if (isKnockout && match.qualifier && matchWinner === "draw") {
+    const pickTeam = pickWinner === "home" ? match.home : pickWinner === "away" ? match.away : null;
+    if (pickTeam && pickTeam === match.qualifier) return base;
+  }
+
   return 0;
 }
 
