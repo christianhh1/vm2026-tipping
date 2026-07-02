@@ -88,9 +88,15 @@ function calcPoints(pick, match) {
   }
   const pickWinner = ph > pa ? "home" : ph < pa ? "away" : "draw";
   const matchWinner = mh > ma ? "home" : mh < ma ? "away" : "draw";
-  // I knockout gir uavgjort kun poeng hvis man treffer eksakt stilling + riktig lag videre (håndtert over)
-  // Så uavgjort her (feil stilling) = 0 poeng i knockout
-  if (pickWinner === matchWinner && !(isKnockout && pickWinner === "draw")) return base;
+
+  if (pickWinner === matchWinner) {
+    if (isKnockout && pickWinner === "draw") {
+      // Uavgjort i knockout med feil stilling: sjekk om riktig lag videre
+      if (pick.qualifier && match.qualifier && pick.qualifier === match.qualifier) return base;
+      return 0;
+    }
+    return base;
+  }
   return 0;
 }
 
