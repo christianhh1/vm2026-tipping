@@ -79,32 +79,36 @@ function calcPoints(pick, match) {
   const [base, bonus] = ROUND_POINTS[roundKey];
   const isKnockout = roundKey !== "group";
 
+  // Faktisk vinner (via qualifier eller direkte seier)
+  const actualWinner = match.qualifier
+    ? match.qualifier
+    : mh > ma ? match.home : mh < ma ? match.away : null;
+
+  // Hvem spilleren tippet går videre
+  const pickedWinner = pick.qualifier
+    ? pick.qualifier
+    : ph > pa ? match.home : ph < pa ? match.away : null;
+
+  // Eksakt stilling etter 90 min
   if (ph === mh && pa === ma) {
-    if (isKnockout && mh === ma) {
-      if (pick.qualifier && match.qualifier && pick.qualifier === match.qualifier) return base + bonus;
-      return 0;
+    if (isKnockout) {
+      if (!actualWinner) return base + bonus;
+      if (pickedWinner && pickedWinner === actualWinner) return base + bonus;
+      return base; // riktig stilling, feil lag videre
     }
     return base + bonus;
   }
+
+  // Ikke eksakt stilling
+  if (isKnockout) {
+    if (actualWinner && pickedWinner && pickedWinner === actualWinner) return base;
+    return 0;
+  }
+
+  // Gruppespill: basepoeng for riktig utfall
   const pickWinner = ph > pa ? "home" : ph < pa ? "away" : "draw";
   const matchWinner = mh > ma ? "home" : mh < ma ? "away" : "draw";
-
-  if (pickWinner === matchWinner) {
-    if (isKnockout && pickWinner === "draw") {
-      // Uavgjort i knockout med feil stilling: sjekk om riktig lag videre
-      if (pick.qualifier && match.qualifier && pick.qualifier === match.qualifier) return base;
-      return 0;
-    }
-    return base;
-  }
-
-  // I knockout: hvis kampen gikk til straffer (match.qualifier er satt),
-  // gi basepoeng til de som tippet riktig lag videre (selv om de tippet feil stilling)
-  if (isKnockout && match.qualifier && matchWinner === "draw") {
-    const pickTeam = pickWinner === "home" ? match.home : pickWinner === "away" ? match.away : null;
-    if (pickTeam && pickTeam === match.qualifier) return base;
-  }
-
+  if (pickWinner === matchWinner) return base;
   return 0;
 }
 
