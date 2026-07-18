@@ -94,10 +94,7 @@ function calcPoints(pick, match) {
     if (isKnockout) {
       if (!actualWinner) return base + bonus;
       if (pickedWinner && pickedWinner === actualWinner) return base + bonus;
-      if (pickedWinner && pickedWinner !== actualWinner) return base; // riktig stilling, feil lag videre
-      // pickedWinner er null (ingen qualifier valgt) og kampen ble uavgjort = 0p
-      if (mh === ma) return 0;
-      // pickedWinner er null men kampen ble ikke uavgjort - de tippet uavgjort men kampen ble avgjort
+      // Riktig stilling men feil lag videre = 0p
       return 0;
     }
     return base + bonus;
